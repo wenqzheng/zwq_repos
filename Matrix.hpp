@@ -23,7 +23,7 @@ class Matrix
 {
 private:
 template<int R, int C>
-using dataType = std::array<std::array<DataType,R>,C>;
+using dataType = std::array<std::array<DataType, R>, C>;
 
 using Func = std::function<DataType(DataType)>;
 
@@ -32,33 +32,33 @@ constexpr auto sign(const int I) const
     return (I % 2) ? 1 : -1;
 }
 
-constexpr Matrix<DataType,ROW-1,COL-1> subdet(const int I,const int J) const
+constexpr Matrix<DataType, ROW - 1, COL - 1> subdet(const int I,const int J) const
 {
-    dataType<ROW-1,COL-1> temp{{0}};
+    dataType<ROW - 1, COL - 1> temp{{0}};
     for (int i = 0; i < I; ++i) {
         for (int j = 0; j < J; ++j)
             temp[i][j] = data[i][j];
-        for (int j = J; j < COL-1; ++j)
+        for (int j = J; j < COL - 1; ++j)
             temp[i][j] = data[i][j + 1];
     }
 
-    for (int i = I; i < ROW-1; ++i) {
+    for (int i = I; i < ROW - 1; ++i) {
         for (int j = 0; j < J; ++j)
             temp[i][j] = data[i + 1][j];
-        for (int j = J; j < COL-1; ++j)
+        for (int j = J; j < COL - 1; ++j)
             temp[i][j] = data[i + 1][j + 1];
     }
 
-    Matrix<DataType, ROW-1, COL-1> tempM(temp);
+    Matrix<DataType, ROW - 1, COL - 1> tempM(temp);
     return tempM;
 }
 
 public:
-constexpr Matrix(const dataType<ROW,COL>& temp)
+constexpr Matrix(const dataType<ROW, COL>& temp)
     :data(temp)
 {}
 
-constexpr Matrix(const Matrix<DataType,ROW,COL>& tempM)
+constexpr Matrix(const Matrix<DataType, ROW, COL>& tempM)
     :data(tempM.data)
 {}
 
@@ -73,21 +73,21 @@ constexpr DataType det() const
         ret = data[0][0];
     if constexpr (ROW > 1) {
         for (int i = 0; i < ROW; ++i)
-            ret += sign(i) * data[i][0] * subdet(i,0).det();
+            ret += sign(i) * data[i][0] * subdet(i, 0).det();
     }
     return ret;
 }
 
-constexpr Matrix<DataType,ROW,COL> foreach(const Func func) const
+constexpr Matrix<DataType, ROW, COL> foreach(const Func func) const
 {
-    dataType<ROW,COL> temp{{0}};
+    dataType<ROW, COL> temp{{0}};
     for(int i = 0; i < ROW; ++i) {
         for(int j = 0; j < COL; ++j) {
             auto tem = data[i][j];
             temp[i][j] = func(tem);
         }
     }
-    Matrix<DataType,ROW,COL> tempM(temp);
+    Matrix<DataType, ROW, COL> tempM(temp);
     return tempM;
 }
 
@@ -104,11 +104,11 @@ constexpr DataType squariance() const
 constexpr auto normalize_one() const
 {
     auto sqc = squariance();
-    dataType<ROW,COL> temp{{0}};
+    dataType<ROW, COL> temp{{0}};
     for (int i = 0; i < ROW; ++i)
         for (int j = 0; j < COL; ++j)
             temp[i][j] = data[i][j]/std::sqrt(sqc);
-    Matrix<DataType,ROW,COL> tempM(temp);
+    Matrix<DataType, ROW, COL> tempM(temp);
     return tempM;
 }
 
@@ -118,7 +118,7 @@ public:
 
 
 public:
-    dataType<ROW,COL> data;
+    dataType<ROW, COL> data;
 };
 
 }
