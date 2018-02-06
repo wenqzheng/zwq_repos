@@ -5,18 +5,23 @@
 #pragma once
 
 #include "../queue/blockingconcurrentqueue.h"
+#include "function_wrapper.hpp"
 #include <vector>
 #include <thread>
 #include <memory>
 #include <atomic>
 #include <functional>
 
+using elementType = std::shared_ptr<function_wrapper>;
+	       // = std::function<void()>;
+	       // = function_wrapper;
+
 class thread_pool
 {
 public:
     std::atomic_bool flag;
     std::vector<std::thread> threads_group;
-    moodycamel::BlockingConcurrentQueue<std::function<void()>> task_queue;
+    moodycamel::BlockingConcurrentQueue<elementType> task_queue;
 
 public:
     thread_pool(unsigned int num = std::thread::hardware_concurrency())
@@ -56,9 +61,9 @@ public:
 
     void run_pending_task()
     {
-        std::function<void()> task;
+	elementType task;
         task_queue.wait_dequeue(task);
-        task();
+        (*task)();
     }
 
 };

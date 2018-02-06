@@ -52,8 +52,8 @@ using valueType =  std::shared_ptr<Strategy>;
 
 void lmp()
 {
-    
-    //cout << std::this_thread::get_id() << endl;
+    cout << "zwq" << endl;
+    cout << std::this_thread::get_id() << endl;
 };
 
 int main()
@@ -96,6 +96,6 @@ int main()
  
     thread_pool thrp(7);
     cout << thrp.threads_group.capacity() << endl;
-
+    thrp.submit(std::make_shared<function_wrapper>(std::move(lmp)));
     return 0;
 }
