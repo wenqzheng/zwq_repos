@@ -3,6 +3,8 @@
 #include <thread>
 #include <memory>
 #include <atomic>
+#include <string>
+#include <typeinfo>
 using namespace std;
 
 int main()
@@ -11,18 +13,20 @@ int main()
     cout << std::this_thread::get_id() << endl;
     std::shared_ptr<std::string> Str;
     cout << atomic_is_lock_free(&Str) << endl;
-    moodycamel::BlockingConcurrentQueue<int> q;
+    moodycamel::BlockingConcurrentQueue<std::shared_ptr<string>> q;
     std::thread producer([&]() {
-        int i = 0;
-        cin >> i;
-        q.enqueue(i);
+        string str;
+        cin >> str;
+        std::shared_ptr<string> pi = make_shared<string>(str);
+        q.enqueue(pi);
         cout << std::this_thread::get_id() << endl;
     });
 
     std::thread consumer([&]() {
-        int item;
+        std::shared_ptr<string> item;
         q.wait_dequeue(item);
-        cout << item+10 << endl;
+        cout << typeid(decltype(item)).name() << endl;
+        cout << *item << endl;
         cout << std::this_thread::get_id() << endl;
     });
 
