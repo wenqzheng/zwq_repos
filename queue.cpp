@@ -52,14 +52,12 @@ using valueType =  std::shared_ptr<Strategy>;
 
 void lmp()
 {
-    cout << "zwq" << endl;
-    cout << std::this_thread::get_id() << endl;
+    
+    //cout << std::this_thread::get_id() << endl;
 };
 
 int main()
 {
-    std::vector<std::thread> threads_group(std::thread::hardware_concurrency());
-    cout << sizeof(threads_group) << endl;
     std::shared_ptr<std::string> Str;
     cout << atomic_is_lock_free(&Str) << endl;
     moodycamel::BlockingConcurrentQueue<valueType> q;
@@ -96,19 +94,8 @@ int main()
     producer.join();
     consumer.join();
  
-    thread_pool thrp;
-    int count = 0;
-    //thrp.submit(lmp);
-    for (int i = 0; i < 10; ++i) {
-    	thrp.submit([&count]() {
-	    ++count;
-	    sleep(1);
-       	    cout << "count = " << count << endl;
-	    cout << std::this_thread::get_id() << endl;	
-        });
-    }
-    sleep(5);
-    cout << "count = " << count << endl;
+    thread_pool thrp(7);
+    cout << thrp.threads_group.capacity() << endl;
 
-   return 0;
+    return 0;
 }

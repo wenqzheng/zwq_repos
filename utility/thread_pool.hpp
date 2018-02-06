@@ -5,7 +5,7 @@
 #pragma once
 
 #include "../queue/blockingconcurrentqueue.h"
-#include <list>
+#include <vector>
 #include <thread>
 #include <memory>
 #include <atomic>
@@ -13,18 +13,20 @@
 
 class thread_pool
 {
+public:
     std::atomic_bool flag;
-    std::list<std::thread> threads_group;
+    std::vector<std::thread> threads_group;
     moodycamel::BlockingConcurrentQueue<std::function<void()>> task_queue;
 
 public:
-    thread_pool()
+    thread_pool(unsigned int num = std::thread::hardware_concurrency())
         :flag(false)
     {
         try {
-            for (int i = 0; i < std::thread::hardware_concurrency(); ++i)
+            for (auto i = 0; i < num; ++i)
                 threads_group.push_back(
 		    std::thread(&thread_pool::work_thread, this));
+	    threads_group.shrink_to_fit();
         } catch (...) {
             flag = true;
             throw;
