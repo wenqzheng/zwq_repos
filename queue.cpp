@@ -62,16 +62,16 @@ int main()
 	Stra3 s3;
 	valueType pi;
 	if (i == 1)
-            pi = make_shared<Strategy>(s1);
+            pi = std::make_shared<Strategy>(s1);
 	else if (i == 2)
-	    pi = make_shared<Strategy>(s2);
+	    pi = std::make_shared<Strategy>(s2);
 	else if (i == 3)
-     	    pi = make_shared<Strategy>(s3);
+     	    pi = std::make_shared<Strategy>(s3);
 	else {
 	    cout << "error num" << endl;
 	    return;
 	}
-        q.enqueue(std::move(pi));
+        q.enqueue(pi);
         cout << std::this_thread::get_id() << endl;
     });
 
