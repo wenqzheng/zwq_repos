@@ -12,16 +12,16 @@
 #include <atomic>
 #include <functional>
 
-using elementType = std::shared_ptr<function_wrapper>;
-	       // = std::function<void()>;
-	       // = function_wrapper;
+using taskType
+    // = std::shared_ptr<function_wrapper>;
+	= std::function<void()>;
+	// = function_wrapper;
 
 class thread_pool
 {
-public:
     std::atomic_bool flag;
     std::vector<std::thread> threads_group;
-    moodycamel::BlockingConcurrentQueue<elementType> task_queue;
+    moodycamel::BlockingConcurrentQueue<taskType> task_queue;
 
 public:
     thread_pool(unsigned int num = std::thread::hardware_concurrency())
@@ -29,7 +29,7 @@ public:
     {
         try {
             for (auto i = 0; i < num; ++i)
-                threads_group.push_back(
+                threads_group.emplace_back(
 		    std::thread(&thread_pool::work_thread, this));
 	    threads_group.shrink_to_fit();
         } catch (...) {
@@ -61,9 +61,9 @@ public:
 
     void run_pending_task()
     {
-	elementType task;
+	    taskType task;
         task_queue.wait_dequeue(task);
-        (*task)();
+        task();
     }
 
 };

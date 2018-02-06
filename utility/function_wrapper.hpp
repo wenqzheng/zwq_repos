@@ -1,3 +1,11 @@
+// function_wrapper.hpp
+// ----by wenqzheng
+//-----------------------------------------------------------------------------
+
+#pragma once
+
+#include <memory>
+
 class function_wrapper
 {
 struct impl_base
@@ -43,5 +51,4 @@ void operator()()
     impl->call();
 }
 };
-
 
