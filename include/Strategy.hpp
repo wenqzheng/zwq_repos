@@ -10,28 +10,28 @@ struct StrategyConcept
     virtual std::string return_something() const = 0;
 };
 
-template<typename S>
+template<typename Strat>
 struct StrategyModel:StrategyConcept
 {
-    StrategyModel(const S& s):strategy(s) {}
+    StrategyModel(const Strat& strat):strategy(strat) {}
     virtual void do_something() const
     {
         strategy.do_something();
     }
     virtual std::string return_something() const
     {
-        return typeid(S).name();
+        return typeid(Strat).name();
     }
 private:
-    S strategy;
+    Strat strategy;
 };
 
 std::shared_ptr<StrategyConcept> strategy;
 
 public:
-template<typename S>
-Strategy(const S& s)
-    :strategy(std::make_shared<StrategyModel<S>>(s))
+template<typename Strat>
+Strategy(const Strat& strat)
+    :strategy(std::make_shared<StrategyModel<Strat>>(strat))
 {}
 
 Strategy() = default;

@@ -1,6 +1,6 @@
 #include "queue/blockingconcurrentqueue.h"
 #include "include/Strategy.hpp"
-#include "thread_pool.hpp"
+#include "utility/thread_pool.hpp"
 #include <iostream>
 #include <thread>
 #include <memory>
@@ -8,6 +8,7 @@
 #include <string>
 #include <typeinfo>
 #include <vector>
+#include <unistd.h>
 using namespace std;
 
 class Stra1
@@ -96,7 +97,18 @@ int main()
     consumer.join();
  
     thread_pool thrp;
-    thrp.submit(lmp);
+    int count = 0;
+    //thrp.submit(lmp);
+    for (int i = 0; i < 10; ++i) {
+    	thrp.submit([&count]() {
+	    ++count;
+	    sleep(1);
+       	    cout << "count = " << count << endl;
+	    cout << std::this_thread::get_id() << endl;	
+        });
+    }
+    sleep(5);
+    cout << "count = " << count << endl;
 
    return 0;
 }
