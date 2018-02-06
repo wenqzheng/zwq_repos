@@ -34,6 +34,8 @@ Strategy(const S& s)
     :strategy(std::make_shared<StrategyModel<S>>(s))
 {}
 
+Strategy() = default;
+
 std::string return_something() const
 {
     return strategy->return_something();
