@@ -77,14 +77,16 @@ int main()
     std::string str1 = "hello";
     auto str2 = std::string("world");
     thread_pool thrp(7);
-    //thrp.submit(std::bind(lmp,str1)).get();
+    cout << "workThread: " << thrp.workThread << endl;
+    thrp.submit(lmp);
     thrp.submit([&](){
         int local = thrp.workThread;
         cout << "good" << endl;
         cout << "workThread: " << local << endl;
         cout << std::this_thread::get_id() << endl;
-        thrp.submit(lmp).get();
+        thrp.submit(lmp);
     });
+    sleep(5);
  //   cout << typeid(decltype(str1)).name() << endl;
  //   cout << typeid(decltype(str2)).name() << endl;
     //lmp("zwq");
