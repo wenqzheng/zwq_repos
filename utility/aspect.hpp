@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include <type_traits>                              // std::is_same
-#include <utility>                                  // std::declval
+#include <type_traits>
+#include <utility>
 
 #define HAS_MEMBER(member)                          \
 template<typename T, typename... Args>              \
