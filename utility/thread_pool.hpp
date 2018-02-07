@@ -4,24 +4,20 @@
 
 #pragma once
 
-#include "../queue/blockingconcurrentqueue.h"
+#include "../queue/concurrentqueue.h"
 #include "function_wrapper.hpp"
 #include <vector>
 #include <thread>
 #include <memory>
 #include <atomic>
-#include <functional>
-
-using taskType
-    // = std::shared_ptr<function_wrapper>;
-	= std::function<void()>;
-	// = function_wrapper;
+#include <future>
 
 class thread_pool
 {
+    using taskType = function_wrapper;
     std::atomic_bool flag;
     std::vector<std::thread> threads_group;
-    moodycamel::BlockingConcurrentQueue<taskType> task_queue;
+    moodycamel::ConcurrentQueue<taskType> task_queue;
 
 public:
     thread_pool(unsigned int num = std::thread::hardware_concurrency())
@@ -56,14 +52,16 @@ public:
     template<typename FuncType>
     void submit(FuncType func)
     {
-        task_queue.enqueue(func);
+        task_queue.enqueue(std::move(func));
     }
 
     void run_pending_task()
     {
 	    taskType task;
-        task_queue.wait_dequeue(task);
-        task();
+        if (task_queue.try_dequeue(task))
+            task();
+        else
+            std::this_thread::yield();
     }
 
 };
