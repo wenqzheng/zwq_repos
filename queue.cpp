@@ -49,44 +49,35 @@ public:
 
 using valueType =  std::shared_ptr<Strategy>;
 
+static int i = 0;
 
 void lmp()
 {
-    int local = thread_pool::workThread;
-    cout << "const std::string& " << endl;
-    cout << "workThread: " << local << endl;
-}
-/*
-void lmp(std::string&& str)
-{
-    cout << "std::string&& " << str << endl;
-}
-*/
-/*
-void lmp()
-{
+    ++i;
     cout << "zwq" << endl;
     cout << std::this_thread::get_id() << endl;
 }
-*/
-
-
 
 int main()
 {
     std::string str1 = "hello";
     auto str2 = std::string("world");
     thread_pool thrp(7);
+<<<<<<< HEAD
     cout << "workThread: " << thrp.workThread << endl;
+=======
+>>>>>>> b7990e35ae9d42846dd29b659a6d266215072ea9
     thrp.submit(lmp);
     thrp.submit([&](){
-        int local = thrp.workThread;
         cout << "good" << endl;
-        cout << "workThread: " << local << endl;
         cout << std::this_thread::get_id() << endl;
         thrp.submit(lmp);
     });
     sleep(5);
+<<<<<<< HEAD
+=======
+    cout << "i = " << i << endl;
+>>>>>>> b7990e35ae9d42846dd29b659a6d266215072ea9
  //   cout << typeid(decltype(str1)).name() << endl;
  //   cout << typeid(decltype(str2)).name() << endl;
     //lmp("zwq");

@@ -23,13 +23,14 @@ private:
     Func func;
 };
 
+function_wrapper(const function_wrapper&) = delete;
+function_wrapper(function_wrapper&) = delete;
+function_wrapper& operator=(const function_wrapper&) = delete;
+
 std::unique_ptr<impl_base> impl;
 
 public:
 function_wrapper() = default;
-function_wrapper(const function_wrapper&) = delete;
-function_wrapper(function_wrapper&) = delete;
-function_wrapper& operator=(const function_wrapper&) = delete;
 
 template<typename Func>
 function_wrapper(Func&& func)
