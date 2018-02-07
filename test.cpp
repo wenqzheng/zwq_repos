@@ -9,7 +9,7 @@ int main()
     thread_pool thrp;
     std::atomic<int> r(0);
     std::thread thd1([&]{
-	for (int i = 0; i < 10; ++i) {
+	for (int i = 0; i < 50; ++i) {
 	    auto thdId = std::this_thread::get_id();
 	    thrp.submit([&]{
 		//std::cout << "thread 1 ID: " << thdId << std::endl;
@@ -20,7 +20,7 @@ int main()
     });
 
     std::thread thd2([&]{
-	for (int i = 0; i < 10; ++i) {
+	for (int i = 0; i < 50; ++i) {
 	    auto thdId = std::this_thread::get_id();
 	    thrp.submit([&]{
 		//std::cout << "thread 2 ID: " << thdId << std::endl; 

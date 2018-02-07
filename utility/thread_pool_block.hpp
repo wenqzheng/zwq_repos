@@ -44,10 +44,7 @@ class thread_pool
 
     void terminal()
     {
-
-        while (!threads_group.empty()) {
-	    std::unique_ptr<std::thread> thr(threads_group.end());
-	    threads_group.pop_back();
+	for (auto& thr:threads_group)
             if (thr.joinable())
                 thr.join();
     }
