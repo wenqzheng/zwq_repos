@@ -1,11 +1,11 @@
 // thread_pool.hpp
 // ----by wenqzheng
-// you should maintain running in runtime
+// you should manipulate blocking in runtime
 //-----------------------------------------------------------------------------
 
 #pragma once
 
-#include "../queue/concurrentqueue.h"
+#include "../queue/blockingconcurrentqueue.h"
 #include "function_wrapper.hpp"
 #include <vector>
 #include <thread>
@@ -20,7 +20,7 @@ class thread_pool
     static thread_local std::atomic_bool workThread;
     std::atomic_bool flag;
     std::vector<std::thread> threads_group;
-    moodycamel::ConcurrentQueue<taskType> task_queue;
+    moodycamel::BlockingConcurrentQueue<taskType> task_queue;
     
     void run_pending_task()
     {
@@ -28,8 +28,10 @@ class thread_pool
         moodycamel::ConsumerToken ctok(task_queue);
         if (task_queue.try_dequeue(ctok, task) || task_queue.try_dequeue(task))
             task();
-        else
-            std::this_thread::yield();
+        else {
+	    task_queue.wait_dequeue(task);
+	    task();
+	}
     }
 
     void work_thread()
@@ -39,7 +41,17 @@ class thread_pool
             run_pending_task();
         }
     }
- 
+
+    void terminal()
+    {
+
+        while (!threads_group.empty()) {
+	    std::unique_ptr<std::thread> thr(threads_group.end());
+	    threads_group.pop_back();
+            if (thr.joinable())
+                thr.join();
+    }
+
 public:
     thread_pool(unsigned int num = std::thread::hardware_concurrency())
         :flag(false)
@@ -58,9 +70,7 @@ public:
     ~thread_pool()
     {
         flag = true;
-        for (auto& thr:threads_group)
-            if (thr.joinable())
-                thr.join();
+	terminal();
     }
 
     template<typename FuncType>
