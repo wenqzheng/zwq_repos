@@ -43,8 +43,8 @@ public:
     {}
 
     template<typename Asp>
-    typename std::enable_if<has_member_front<Asp, Args...>::value &&
-        has_member_back<Asp, Args...>::value>::type
+    std::enable_if_t<has_member_front<Asp, Args...>::value &&
+        has_member_back<Asp, Args...>::value>
     invoke(Args&&... args, Asp&& asp)
     {
         asp.front(std::forward<Args>(args)...);
@@ -53,8 +53,8 @@ public:
     }
 
     template<typename Asp>
-    typename std::enable_if<has_member_front<Asp, Args...>::value &&
-        !has_member_back<Asp, Args...>::value>::type
+    std::enable_if_t<has_member_front<Asp, Args...>::value &&
+        !has_member_back<Asp, Args...>::value>
     invoke(Args&&... args, Asp&& asp)
     {
         asp.front(std::forward<Args>(args)...);
@@ -62,8 +62,8 @@ public:
     }
 
     template<typename Asp>
-    typename std::enable_if<!has_member_front<Asp, Args...>::value &&
-        has_member_back<Asp, Args...>::value>::type
+    std::enable_if_t<!has_member_front<Asp, Args...>::value &&
+        has_member_back<Asp, Args...>::value>
     invoke(Args&&... args, Asp&& asp)
     {
         m_func(std::forward<Args>(args)...);
@@ -71,8 +71,8 @@ public:
     }
 
     template<typename AspHead, typename... AspTail>
-    typename std::enable_if<has_member_front<AspHead, Args...>::value &&
-        has_member_back<AspHead, Args...>::value>::type
+    std::enable_if_t<has_member_front<AspHead, Args...>::value &&
+        has_member_back<AspHead, Args...>::value>
     invoke(Args&&... args, AspHead&& asphead, AspTail&&... asptail)
     {
         asphead.front(std::forward<Args>(args)...);
@@ -82,8 +82,8 @@ public:
     }
 
     template<typename AspHead, typename... AspTail>
-    typename std::enable_if<has_member_front<AspHead, Args...>::value &&
-        !has_member_back<AspHead, Args...>::value>::type
+    std::enable_if_t<has_member_front<AspHead, Args...>::value &&
+        !has_member_back<AspHead, Args...>::value>
     invoke(Args&&... args, AspHead&& asphead, AspTail&&... asptail)
     {
         asphead.front(std::forward<Args>(args)...);
@@ -92,8 +92,8 @@ public:
     }
 
     template<typename AspHead, typename... AspTail>
-    typename std::enable_if<!has_member_front<AspHead, Args...>::value &&
-        has_member_back<AspHead, Args...>::value>::type
+    std::enable_if_t<!has_member_front<AspHead, Args...>::value &&
+        has_member_back<AspHead, Args...>::value>
     invoke(Args&&... args, AspHead&& asphead, AspTail&&... asptail)
     {
         invoke<AspTail...>(std::forward<Args>(args)...,
@@ -104,7 +104,7 @@ public:
 };
 
 template<typename... Asp, typename... Args, typename FuncType>
-void invoke(FuncType&& func, Args&&... args)
+void invoke_aspect(FuncType&& func, Args&&... args)
 {
     aspect<FuncType, Args...> asp(std::forward<FuncType>(func));
     asp.invoke(std::forward<Args>(args)..., Asp()...);

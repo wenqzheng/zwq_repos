@@ -16,7 +16,7 @@
 
 class thread_pool
 {
-    using taskType = function_wrapper;
+    using taskType = function_wrapper<>;
     static thread_local std::atomic_bool workThread;
     std::atomic_bool flag;
     std::vector<std::thread> threads_group;
@@ -73,7 +73,7 @@ public:
     template<typename FuncType>
     decltype(auto) submit(FuncType func)
     {
-        using result_type = typename std::result_of<FuncType()>::type;
+        using result_type = std::invoke_result_t<FuncType>;
         std::packaged_task<result_type()> task(std::move(func));
         std::future<result_type> ret(task.get_future());
         if (workThread) {

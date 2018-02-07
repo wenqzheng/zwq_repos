@@ -5,6 +5,10 @@
 #include <typeinfo>
 #include <unistd.h>
 #include <utility>
+#include <string>
+#include <optional>
+#include <functional>
+
 
 using namespace std;
 
@@ -55,6 +59,11 @@ void GT()
     cout << "GT function" << endl;
 }
 
+void wraper()
+{
+    return GT();
+}
+
 int main()
 {
     auto lmp([]{
@@ -67,7 +76,11 @@ int main()
     //auto f = function_wrapper(std::bind(&DD::front,&dd));
     thread_pool thrp;
     //thrp.submit(lmp);
-    thrp.submit([&]{invoke<AA,DD>(std::bind(&DD::front,sp_D,std::placeholders::_1),5);});
+    thrp.submit([&]{invoke_aspect<AA,DD>(std::bind(&DD::front,sp_D,std::placeholders::_1),5);});
+
+    std::optional<string> str("zwq");
+    cout << typeid(decltype(str)).name() << endl;
+    wraper();
     //thrp.submit([&]{invoke<BB,CC>(GT);});
     sleep(2);
     return 0;

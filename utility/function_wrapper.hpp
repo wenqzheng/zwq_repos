@@ -6,11 +6,12 @@
 
 #include <memory>
 
+template<typename T = void>
 class function_wrapper
 {
 struct impl_base
 {
-    virtual void call() = 0;
+    virtual T call() = 0;
     virtual ~impl_base() {}
 };
 
@@ -18,7 +19,7 @@ template<typename Func>
 struct impl_type:impl_base
 {
     impl_type(Func&& func_):func(std::move(func_)) {}
-    void call() {func();}
+    T call() {return func();}
 private:
     Func func;
 };
@@ -47,9 +48,9 @@ function_wrapper& operator=(function_wrapper&& func_)
     return *this;
 }
 
-void operator()()
+T operator()()
 {
-    impl->call();
+    return impl->call();
 }
 };
 
