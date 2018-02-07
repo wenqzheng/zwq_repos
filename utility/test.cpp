@@ -1,4 +1,4 @@
-//#include "aspect.hpp"
+#include "aspect.hpp"
 #include "thread_pool.hpp"
 #include <iostream>
 #include <typeinfo>
@@ -58,7 +58,7 @@ int main()
     });
     thread_pool thrp;
     thrp.submit(lmp);
-    //thrp.submit(invoke<AA,BB>(lmp));
-    //invoke<BB,CC>(GT);
+    thrp.submit([&lmp]{invoke<AA,BB>(lmp);});
+    invoke<BB,CC>(GT);
     return 0;
 }
