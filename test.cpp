@@ -1,55 +1,67 @@
-#include "utility/thread_pool_block.hpp"
+#include "utility/aspect.hpp"
+#include "utility/thread_pool.hpp"
 #include <iostream>
-#include <thread>
+#include <typeinfo>
 #include <unistd.h>
-#include <stdio.h>
-#include <atomic>
+
+using namespace std;
+
+struct AA
+{
+    void front()
+    {
+        cout << "front from AA" << endl;
+    }
+
+    void back()
+    {
+        cout << "back from AA" << endl;
+    }
+};
+
+struct BB
+{
+    void front()
+    {
+        cout << "front from BB" << endl;
+    }
+};
+
+struct CC
+{
+    void back()
+    {
+        cout << "back from CC" << endl;
+    }
+};
+
+struct DD
+{
+    void front()
+    {
+        cout << "front from DD" << endl;
+    }
+
+    void back()
+    {
+        cout << "back from DD" << endl;
+    }
+};
 
 void GT()
 {
-    std::cout << "GT function" << std::endl;
-}
-
-void HT()
-{
-    std::cout << "HT function" << std::endl;
+    cout << "GT function" << endl;
 }
 
 int main()
 {
+    auto lmp([]{
+        cout << "I am lambda" << endl;    
+    });
     thread_pool thrp;
-    std::atomic<int> r(0);
-    std::thread thd1([&]{
-	for (int i = 0; i < 50; ++i) {
-	    auto thdId = std::this_thread::get_id();
-	    thrp.submit([&]{
-		//std::cout << "thread 1 ID: " << thdId << std::endl;
-		++r;
-		printf("%s\t%d\n","thread 1 ID",thdId);
-	    });
-	}
-    });
-
-    std::thread thd2([&]{
-	for (int i = 0; i < 50; ++i) {
-	    auto thdId = std::this_thread::get_id();
-	    thrp.submit([&]{
-		//std::cout << "thread 2 ID: " << thdId << std::endl; 
-		++r;
-		printf("%s\t%d\n","thread 2 ID",thdId);
-	    });
-	}		    
-    });
-
+    thrp.submit(lmp);
+    thrp.submit([&lmp]{invoke<AA,BB>(lmp);});
+    thrp.submit([&]{invoke<BB,CC>(GT);});
     sleep(2);
-    std::cout << "r = " << r << std::endl;
-    for (int i = 0; i < std::thread::hardware_concurrency(); ++i)
-	thrp.submit([]{pthread_exit(0);});
-
-    std::cout << "&GT : " << &GT << std::endl;
-    std::cout << "&HT : " << &HT << std::endl;
-    std::cout << "&thrp : " << &thrp << std::endl;
-    thd1.join();
-    thd2.join();
+    return 0;
 }
-
