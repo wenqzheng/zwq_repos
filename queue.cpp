@@ -69,10 +69,14 @@ int main()
 {
     thread_pool thrp(7);
     thrp.submit(lmp);
+    thrp.submit([](){
+        cout << "good" << endl;
+        cout << std::this_thread::get_id() << endl;
+    });
     const std::string str1 = "zwq";
     auto str2 = std::string("zwq");
-    cout << typeid(decltype(str1)).name() << endl;
-    cout << typeid(decltype(str2)).name() << endl;
+ //   cout << typeid(decltype(str1)).name() << endl;
+ //   cout << typeid(decltype(str2)).name() << endl;
     //lmp("zwq");
     //lmp(std::move(str1));
     //lmp(std::move(str2));

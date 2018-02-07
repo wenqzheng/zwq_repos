@@ -11,6 +11,8 @@
 #include <memory>
 #include <atomic>
 #include <future>
+#include <type_traits>
+#include <utility>
 
 class thread_pool
 {
@@ -48,11 +50,21 @@ public:
             run_pending_task();
         }
     }
-
+/*
     template<typename FuncType>
     void submit(FuncType func)
     {
         task_queue.enqueue(std::move(func));
+    }
+*/
+    template<typename FuncType>
+    decltype(auto) submit(FuncType func)
+    {
+        using result_type = typename std::result_of<FuncType()>::type;
+        std::packaged_task<result_type()> task(std::move(func));
+        std::future<result_type> ret(task.get_future());
+        task_queue.enqueue(std::move(task));
+        return ret;
     }
 
     void run_pending_task()
