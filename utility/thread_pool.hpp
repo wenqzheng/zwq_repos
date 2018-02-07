@@ -16,7 +16,7 @@
 class thread_pool
 {
     using taskType = function_wrapper;
-    static thread_local std::atomic_bool workThread;
+    public:    static thread_local std::atomic_bool workThread;
     std::atomic_bool flag;
     std::vector<std::thread> threads_group;
     moodycamel::ConcurrentQueue<taskType> task_queue;
