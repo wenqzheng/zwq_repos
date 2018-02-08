@@ -12,6 +12,7 @@
 #include <memory>
 #include <atomic>
 #include <future>
+#include <utility>
 #include <type_traits>
 
 class thread_pool
@@ -39,6 +40,13 @@ class thread_pool
             run_pending_task();
         }
     }
+
+    void terminal()
+    {
+        for (auto& thr:threads_group)
+            if (thr.joinable())
+                thr.join();
+    }
  
 public:
     thread_pool(unsigned int num = std::thread::hardware_concurrency())
@@ -58,9 +66,7 @@ public:
     ~thread_pool()
     {
         flag = true;
-        for (auto& thr:threads_group)
-            if (thr.joinable())
-                thr.join();
+        terminal();
     }
 
     template<typename FuncType>

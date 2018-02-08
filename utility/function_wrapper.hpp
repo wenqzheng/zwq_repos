@@ -5,13 +5,15 @@
 #pragma once
 
 #include <memory>
+#include <utility>
+#include <functional>
 
-template<typename T = void>
+template<typename valueType = void>
 class function_wrapper
 {
 struct impl_base
 {
-    virtual T call() = 0;
+    virtual valueType call() = 0;
     virtual ~impl_base() {}
 };
 
@@ -19,7 +21,7 @@ template<typename Func>
 struct impl_type:impl_base
 {
     impl_type(Func&& func_):func(std::move(func_)) {}
-    T call() {return func();}
+    valueType call() {return func();}
 private:
     Func func;
 };
@@ -48,9 +50,8 @@ function_wrapper& operator=(function_wrapper&& func_)
     return *this;
 }
 
-T operator()()
+valueType operator()()
 {
     return impl->call();
 }
 };
-
