@@ -10,11 +10,13 @@ struct RCInt<N, Tail>
 {
     enum { value = Tail };
 };
+
 template<int N, int Head, int... Tail>
 struct RCInt<N, Head, Tail...>
 {
     enum { value = (N == sizeof...(Tail)) ? Head : RCInt<N, Tail...>::value };
 };
+
 template<int N, int... Ints>
 struct UnpackInts
 {
