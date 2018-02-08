@@ -42,12 +42,7 @@ class thread_pool
         }
     }
 
-    void terminal()
-    {
-	for (auto& thr:threads_group)
-            if (thr.joinable())
-                thr.join();
-    }
+    friend void terminal(thread_pool& thrp);
 
 public:
     thread_pool(unsigned int num = std::thread::hardware_concurrency())
@@ -67,7 +62,9 @@ public:
     ~thread_pool()
     {
         flag = true;
-	terminal();
+	    for (auto& thr:threads_group)
+            if (thr.joinable())
+                thr.join();
     }
 
     template<typename FuncType>
@@ -87,3 +84,9 @@ public:
 };
 
 thread_local std::atomic_bool thread_pool::workThread;
+
+void terminal(thread_pool& thrp)
+{
+    for (auto i = 0; i < thrp.threads_group.capacity(); ++i)
+        thrp.submit(std::bind(pthread_exit, nullptr));
+}

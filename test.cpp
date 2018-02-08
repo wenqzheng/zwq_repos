@@ -134,11 +134,15 @@ int main()
 
     //cout << typeid(shared_ptr<A<int>>).name() << endl;
 
+    std::string pkc(typeid(const char*).name());
+    cout << "TYPEID: " << pkc << endl;
+    
     auto lmpi([]() {return string("zwq");});
     //cout << typeid(decltype(lmpi)).name() << endl;
     //cout << typeid(decltype(lmp)).name() << endl;
     //thrp.submit([&]{invoke<BB,CC>(GT);});
     sleep(2);
+    terminal(thrp);
     //wra()()(2);
     return 0;
 }
