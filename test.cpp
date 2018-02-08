@@ -108,6 +108,12 @@ public:
     }
 };
 */
+
+auto any = [](auto&& obj) {return std::move(obj);};
+using anyType = decltype(any);
+auto anyObject = shared_ptr_wrapper<anyType>(any);
+
+
 int main()
 {
     auto lmp([]{
@@ -168,17 +174,22 @@ int main()
     sleep(2);
     terminal(thrp);
 
-    auto any = [](auto&& u){return u;};
-    using tempType = shared_ptr_wrapper<decltype(any)>;
-    tempType sp_Type = std::make_shared<decltype(any)>(any);
 
-    any(AA()).front(5);
-    any(DD()).front(4);
-    cout << typeid(decltype(any)).name() << endl;
-    cout << typeid(decltype(any(4))).name() << endl;
-    cout << typeid(decltype(any("zwq"))).name() << endl;
-    cout << typeid(decltype(any(AA()))).name() << endl;
-    cout << typeid(decltype(any(DD()))).name() << endl;
+    AA aa;
+
+    auto a1 = anyObject;
+    auto a2 = anyObject;
+    auto b1 = (*a1)(AA());
+    (*a1)(AA()).front(5);
+    (*a2)(DD()).front(4);
+    std::bind(&AA::front,&b1,8)();
+
+    //anyObject(aa);
+   // cout << typeid(decltype(anyObject)).name() << endl;
+   // cout << typeid(decltype(anyObject(4))).name() << endl;
+   // cout << typeid(decltype(anyObject("zwq"))).name() << endl;
+   // cout << typeid(decltype(anyObject(AA()))).name() << endl;
+   // cout << typeid(decltype(anyObject(DD()))).name() << endl;
     //wra()()(2);
     return 0;
 }
