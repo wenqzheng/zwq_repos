@@ -50,7 +50,7 @@ function_wrapper& operator=(function_wrapper&& func_)
     return *this;
 }
 
-valueType operator()()
+auto operator()()
 {
     return impl->call();
 }

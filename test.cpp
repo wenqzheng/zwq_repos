@@ -85,6 +85,29 @@ decltype(auto) wra()
     return func;
 }
 */
+
+
+/*
+class base
+{
+    using anyType = decltype(any);
+public:
+    anyType lmd;
+    std::function<void>;
+    template<typename T>
+    base(const T& t)
+    {
+        [](){return lmd(t);}
+        
+    }
+
+    template<typename T>
+    T showType(const T& t)
+    {
+        return t;
+    }
+};
+*/
 int main()
 {
     auto lmp([]{
@@ -98,12 +121,13 @@ int main()
     //auto f = function_wrapper(std::bind(&DD::front,&dd));
     thread_pool thrp;
 
-    function_wrapper<int> func(GT);
-    cout << func() << endl;
+    //function_wrapper<int> func(GT);
+    //cout << func() << endl;
 
-    function_wrapper<> gunc(std::bind(&DD::front,sp_D,5));
-    gunc();
+    //function_wrapper<> gunc(std::bind(&DD::front,sp_D,5));
+    //gunc();
     thrp.submit(GT);
+
 
 
     thrp.submit(lmp);
@@ -143,6 +167,18 @@ int main()
     //thrp.submit([&]{invoke<BB,CC>(GT);});
     sleep(2);
     terminal(thrp);
+
+    auto any = [](auto&& u){return u;};
+    using tempType = shared_ptr_wrapper<decltype(any)>;
+    tempType sp_Type = std::make_shared<decltype(any)>(any);
+
+    any(AA()).front(5);
+    any(DD()).front(4);
+    cout << typeid(decltype(any)).name() << endl;
+    cout << typeid(decltype(any(4))).name() << endl;
+    cout << typeid(decltype(any("zwq"))).name() << endl;
+    cout << typeid(decltype(any(AA()))).name() << endl;
+    cout << typeid(decltype(any(DD()))).name() << endl;
     //wra()()(2);
     return 0;
 }
