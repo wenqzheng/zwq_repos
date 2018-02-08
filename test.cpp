@@ -108,10 +108,18 @@ public:
     }
 };
 */
-
-auto any = [](auto&& obj) {return std::move(obj);};
+auto any = [](auto obj) {return obj;};
 using anyType = decltype(any);
 auto anyObject = shared_ptr_wrapper<anyType>(any);
+class object
+{
+public:
+    template<typename T>
+    decltype(auto) operator()(T&& t)
+    {
+        return (*anyObject)(t);
+    }
+};
 
 
 int main()
@@ -177,12 +185,10 @@ int main()
 
     AA aa;
 
-    auto a1 = anyObject;
-    auto a2 = anyObject;
-    auto b1 = (*a1)(AA());
-    (*a1)(AA()).front(5);
-    (*a2)(DD()).front(4);
-    std::bind(&AA::front,&b1,8)();
+    //object(AA()).front(5);
+    //object(DD()).front(4);
+    object(aa).front(8);
+//    std::bind(&AA::front,&b1,8)();
 
     //anyObject(aa);
    // cout << typeid(decltype(anyObject)).name() << endl;
