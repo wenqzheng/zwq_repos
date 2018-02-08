@@ -31,7 +31,7 @@ class thread_pool
         else {
 	        task_queue.wait_dequeue(task);
 	        task();
-	    }
+        }
     }
 
     void work_thread()
