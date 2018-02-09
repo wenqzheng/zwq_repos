@@ -235,23 +235,29 @@ int main()
     auto vglambda = [](auto printer) {
         return [=](auto&&... ts) {
             printer(std::forward<decltype(ts)>(ts)...);
-            return [=]{printer(ts...);};
+            return [=]{return printer(ts...);};
         };
     };
 
     auto p = vglambda([](auto v1, auto v2, auto v3) {
             cout << v1 << v2 << v3 << endl;
+            return string("zwq");
             });
     auto q = p(1,'a',3.14);
 
-    thrp.submit(std::bind(p,2,'b',2.78));
+    thrp.submit(thrp.submit(std::bind(p,2,'b',2.78)).get());
 
     //f_w();
 
 
    cout << typeid(decltype(q)).name() << endl;
    cout << typeid(decltype(q())).name() << endl;
+    
 
+   auto rret = []{cout << "I am for test" << endl;};
+   auto trret = [&]{return rret;};
+   trret()();
+   //trret()();
    // cout << typeid(decltype(anyObject(AA()))).name() << endl;
    // cout << typeid(decltype(anyObject(DD()))).name() << endl;
     //wra()()(2);
