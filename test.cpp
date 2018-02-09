@@ -11,6 +11,7 @@
 #include <optional>
 #include <functional>
 #include <array>
+#include <vector>
 
 using namespace std;
 
@@ -108,9 +109,10 @@ public:
     }
 };
 */
-auto any = [](auto obj) {return obj;};
+auto any = [](auto&& obj) {return std::move(obj);};
 using anyType = decltype(any);
-auto anyObject = shared_ptr_wrapper<anyType>(any);
+using Object = shared_ptr_wrapper<anyType>;
+/*
 class object
 {
 public:
@@ -120,7 +122,30 @@ public:
         return (*anyObject)(t);
     }
 };
+*/
+std::vector<Object> vecany;
 
+#define REGKEY(KEY,...) \
+enum KEY                \
+{   \
+__VA_ARGS__    \
+}
+
+//#define eenum(...) __VA_ARGS__
+
+
+//REGKEY(NEWKEY,key_1,key_2,key_3);
+REGKEY(key,key1,key2,key3);
+REGKEY(oldkey,oldkey1,oldkey2,oldkey3);
+/*
+    enum NEWKEY {
+        key_1,
+        key_2,
+        key_3
+    };
+*/
+
+#define CONBINE(PREFIX,...)
 
 int main()
 {
@@ -180,20 +205,53 @@ int main()
     //cout << typeid(decltype(lmp)).name() << endl;
     //thrp.submit([&]{invoke<BB,CC>(GT);});
     sleep(2);
-    terminal(thrp);
 
 
     AA aa;
+    vecany.push_back(std::make_shared<anyType>(any));
+    (*vecany[0])(AA());
+    vecany.push_back(std::make_shared<anyType>(any));
+    (*vecany[1])(DD());
 
+    auto k1 = key1;
+    auto k2 = key2;
+    auto ok1 = oldkey1;
+    auto ok2 = oldkey2;
+
+
+    (*vecany[k1])(BB()).front();
+    (*vecany[ok1])(CC()).back();
     //object(AA()).front(5);
     //object(DD()).front(4);
-    object(aa).front(8);
+   // object(aa).front(8);
 //    std::bind(&AA::front,&b1,8)();
 
     //anyObject(aa);
-   // cout << typeid(decltype(anyObject)).name() << endl;
-   // cout << typeid(decltype(anyObject(4))).name() << endl;
-   // cout << typeid(decltype(anyObject("zwq"))).name() << endl;
+    cout << typeid(decltype(k1)).name() << endl;
+    cout << key1 << endl;
+    cout << typeid(decltype(k2)).name() << endl;
+    cout << key2 << endl;
+
+    auto vglambda = [](auto printer) {
+        return [=](auto&&... ts) {
+            printer(std::forward<decltype(ts)>(ts)...);
+            return [=]{printer(ts...);};
+        };
+    };
+
+    auto p = vglambda([](auto v1, auto v2, auto v3) {
+            cout << v1 << v2 << v3 << endl;
+            });
+    auto q = p(1,'a',3.14);
+
+    thrp.submit(std::bind(p,2,'b',2.78));
+
+    //f_w();
+
+
+   cout << typeid(decltype(q)).name() << endl;
+   cout << typeid(decltype(q())).name() << endl;
+
    // cout << typeid(decltype(anyObject(AA()))).name() << endl;
    // cout << typeid(decltype(anyObject(DD()))).name() << endl;
     //wra()()(2);
