@@ -253,11 +253,25 @@ int main()
    cout << typeid(decltype(q)).name() << endl;
    cout << typeid(decltype(q())).name() << endl;
     
+  
+   auto level4 = [&]{cout << "level 4" << endl;return "the end";};
+    auto level3 = [&]{cout << "level 3" << endl; return level4;};
+   auto level2 = [&]{cout << "level 2" << endl;return level3;};
+   auto level1 = [&]{cout << "level 1" << endl;return level2;};
+cout << "() 1----" << endl;
 
-   auto rret = []{cout << "I am for test" << endl;};
-   auto trret = [&]{return rret;};
-   trret()();
-   //trret()();
+   level1();
+   cout << typeid(decltype(level1())).name() << endl;
+ cout << "() 2----" << endl;
+   level1()();
+   cout << typeid(decltype(level1()())).name() << endl;
+  cout << "() 3----" << endl;
+   level1()()();
+   cout << typeid(decltype(level1()()())).name() << endl;
+cout << "() 4----" << endl;
+   level1()()()();
+   cout << typeid(decltype(level1()()()())).name() << endl;
+//trret()();
    // cout << typeid(decltype(anyObject(AA()))).name() << endl;
    // cout << typeid(decltype(anyObject(DD()))).name() << endl;
     //wra()()(2);
