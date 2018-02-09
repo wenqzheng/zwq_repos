@@ -275,5 +275,14 @@ cout << "() 4----" << endl;
    // cout << typeid(decltype(anyObject(AA()))).name() << endl;
    // cout << typeid(decltype(anyObject(DD()))).name() << endl;
     //wra()()(2);
+    
+    cout << "sp_wrapper_hash 1: " << std::hash<shared_ptr<int>>()(make_shared<int>(8)) << endl;
+    auto spha1 = std::make_shared<int>(8);
+    auto spha2 = std::make_shared<int>(8);
+    cout << "sp_wrapper_hash 1: " << sp_wrapper_hash<int>()(shared_ptr_wrapper<int>(8)) << endl;
+    cout << "sp_wrapper_hash 1: " << sp_wrapper_hash<int>()(spha1) << endl;
+    cout << "sp_wrapper_hash 2: " << sp_wrapper_hash<int>()(spha2) << endl;
+    cout << "sp_hash 1: " << std::hash<std::shared_ptr<int>>()(spha1) << endl;
+    cout << "sp_hash 2: " << std::hash<std::shared_ptr<int>>()(spha2) << endl;
     return 0;
 }

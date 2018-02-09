@@ -6,15 +6,22 @@
 
 #include <memory>
 #include <atomic>
-
-auto __any([](auto&& any) {return std::move(any);});
-using __anyType = decltype(__any);
+#include <cstddef>
+#include <functional>                       // std::hash
 
 template<typename T>
 class shared_ptr_wrapper
 {
-public:
+private:
     std::shared_ptr<T> m_sp_ptr;
+
+    std::size_t __sp_wrapper_hash() const
+    {
+        return std::hash<std::shared_ptr<T>>()(m_sp_ptr);
+    }
+
+    template<typename>
+    friend class sp_wrapper_hash;
 
 public:
     shared_ptr_wrapper() = default;
@@ -24,45 +31,47 @@ public:
     {}
 
     shared_ptr_wrapper& operator=(const shared_ptr_wrapper& sp)
-// sp is thread-safe
     {
         std::atomic_store(&m_sp_ptr, sp.m_sp_ptr);
-	return *this;
+	    return *this;
     }
 
     shared_ptr_wrapper(const std::shared_ptr<T>& sp)
 	    :m_sp_ptr(std::atomic_load(&sp))
-// const guarantee shared_ptr thread-safe
     {}
 
     shared_ptr_wrapper& operator=(const std::shared_ptr<T>& sp)
-// const guarantee shared_ptr thread-safe
     {
         std::atomic_store(&m_sp_ptr, sp);
-	return *this;
+	    return *this;
     }
 
     shared_ptr_wrapper(const T& t)
         :shared_ptr_wrapper(std::make_shared<T>(t))
-// const guarantee T thread-safe
     {}
 
     shared_ptr_wrapper(T&& t)
         :shared_ptr_wrapper(std::make_shared<T>(std::forward<T>(t)))
-// t is a rvalue is thread-safe
     {}
 
     T& operator*() const
-// const guarantee thread-safe
     {
         return *m_sp_ptr;
     }
 
     T* operator->() const
-// const guarantee thread-safe
     {
-        return m_sp_ptr;
+        return m_sp_ptr.get();
     }
 
 };
 
+template<typename U>
+class sp_wrapper_hash
+{
+public:
+    auto operator()(const shared_ptr_wrapper<U>& sp_U)
+    {
+        return sp_U.__sp_wrapper_hash();
+    }
+};
