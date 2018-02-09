@@ -12,6 +12,7 @@
 #include <functional>
 #include <array>
 #include <vector>
+#include <unordered_map>
 
 using namespace std;
 
@@ -275,14 +276,37 @@ cout << "() 4----" << endl;
    // cout << typeid(decltype(anyObject(AA()))).name() << endl;
    // cout << typeid(decltype(anyObject(DD()))).name() << endl;
     //wra()()(2);
-    
-    cout << "sp_wrapper_hash 1: " << std::hash<shared_ptr<int>>()(make_shared<int>(8)) << endl;
+
+//    cout << "sp_wrapper_hash 1: " << std::hash<shared_ptr<int>>()(make_shared<int>(8)) << endl;
     auto spha1 = std::make_shared<int>(8);
     auto spha2 = std::make_shared<int>(8);
+    auto ahash = std::hash<shared_ptr<int>>()(spha1);
+    auto bhash = std::hash<shared_ptr<int>>()(spha1);
+    if (ahash == bhash)
+        cout << "equal to: " << endl;
     cout << "sp_wrapper_hash 1: " << sp_wrapper_hash<int>()(shared_ptr_wrapper<int>(8)) << endl;
     cout << "sp_wrapper_hash 1: " << sp_wrapper_hash<int>()(spha1) << endl;
     cout << "sp_wrapper_hash 2: " << sp_wrapper_hash<int>()(spha2) << endl;
     cout << "sp_hash 1: " << std::hash<std::shared_ptr<int>>()(spha1) << endl;
     cout << "sp_hash 2: " << std::hash<std::shared_ptr<int>>()(spha2) << endl;
+
+    auto lmpp = [](auto&& f){
+        return [&](auto&&... args){
+            return f(std::forward<decltype(args)>(args)...);
+        };
+    };
+
+    cout << "sizeof lambda: " << sizeof(lmpp) << endl;
+    typedef void (*flmd)(int);
+    flmd almd = [](int a){cout << a+1 << endl;};
+    std::function<void(int)> blmd = almd;
+    cout << "sizeof void(*)(): " << sizeof(almd) << endl;
+    cout << "sizeof std::function<void(int)>: " << sizeof(blmd) << endl;
+
+    nullptr_t pnull = NULL;
+    //flmd glmd = almd;
+    unordered_map<string, function<void()>> hmap;
+    cout << hmap.bucket_count() << endl;
+    cout << hmap.bucket_size(4) << endl;
     return 0;
 }
