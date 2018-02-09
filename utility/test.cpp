@@ -1,5 +1,6 @@
 #include "shared_ptr_wrapper.hpp"
 #include "hashmap.hpp"
+#include "Object.hpp"
 #include <iostream>
 #include <string>
 #include <utility>
@@ -18,26 +19,9 @@ string g(int i)
 
 int main()
 {
-    auto lmd = [=](auto&& f) {
-        return [=](auto&&... args) {
-            using ret_type = invoke_result_t<decltype(f),decltype(args)...>;
-            shared_ptr_wrapper<ret_type> sp_R;
-            return [=]() {
-                sp_R = std::make_shared<ret_type>(f(args...));
-            };
-        };
-    };
-
-    auto lmd1 = [=]() {
-        return lmd(g)(4);
-    };
-
-    auto lmd2 = [=]() {
-        lmd1();
-    };
-
-    cout << typeid(decltype(lmd2)).name() << endl;
-
-
+    object obja(f,4);
+    object objb(g,4);
+    //cout << *(obja.m_spw_obj) << endl;
+    //cout << *(objb.m_spw_obj) << endl;
     return 0;
 }

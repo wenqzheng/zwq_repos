@@ -1,29 +1,29 @@
 #include "shared_ptr_wrapper.hpp"
 #include <memory>
+#include <iostream>
 #include <functional>
 #include <type_traits>
 
 class object
 {
+    std::shared_ptr<void> p_tmp;
 public:
-    shared_ptr_wrapper<void> sp_V;
-private:
-    std::function<void()> func_vv;
-public:
+    shared_ptr_wrapper<void> m_spw_obj;
+    
     template<typename funcType, typename... Args>
-    object(funcType&& __func, Args&&... args)
+    object(funcType&& _func, Args&&... _args)
     {
         auto lmd = [=](const auto& __func) {
-            return [=](const auto&... args) {
+            return [=](const auto&... __args) {
                 using retType = std::invoke_result_t<decltype(__func),
-                    decltype(args)...>;
+                    decltype(__args)...>;
                 return [=]() {
-                    sp_V = shared_ptr_wrapper<retType>(
-                        std::make_shared<retType>(__func(args...)));
+                    p_tmp = std::make_shared<retType>(__func(__args...));
+		    m_spw_obj = std::reinterpret_pointer_cast<retType>(p_tmp);
+		    std::cout << typeid(decltype(m_spw_obj)).name() << std::endl;
                 };
             };
         };
-        func_vv = lmd(__func)(args...);
-        func_vv();
+        lmd(_func)(_args...)();
     }
 };
