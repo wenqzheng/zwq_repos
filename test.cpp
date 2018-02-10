@@ -284,9 +284,9 @@ cout << "() 4----" << endl;
     auto bhash = std::hash<shared_ptr<int>>()(spha1);
     if (ahash == bhash)
         cout << "equal to: " << endl;
-    cout << "sp_wrapper_hash 1: " << sp_wrapper_hash<int>()(shared_ptr_wrapper<int>(8)) << endl;
-    cout << "sp_wrapper_hash 1: " << sp_wrapper_hash<int>()(spha1) << endl;
-    cout << "sp_wrapper_hash 2: " << sp_wrapper_hash<int>()(spha2) << endl;
+    cout << "sp_wrapper_hash 1: " << std::hash<shared_ptr_wrapper<int>>()(shared_ptr_wrapper<int>(8)) << endl;
+    cout << "sp_wrapper_hash 1: " << std::hash<shared_ptr_wrapper<int>>()(spha1) << endl;
+    cout << "sp_wrapper_hash 2: " << std::hash<shared_ptr_wrapper<int>>()(spha2) << endl;
     cout << "sp_hash 1: " << std::hash<std::shared_ptr<int>>()(spha1) << endl;
     cout << "sp_hash 2: " << std::hash<std::shared_ptr<int>>()(spha2) << endl;
 
@@ -308,5 +308,13 @@ cout << "() 4----" << endl;
     unordered_map<string, function<void()>> hmap;
     cout << hmap.bucket_count() << endl;
     cout << hmap.bucket_size(4) << endl;
+
+    int a = 88;
+    //auto inner1_a = make_shared<int>(a);
+    //auto inner2_a = make_shared<int>(a);
+    auto sh_a = make_shared<int>(a);
+    auto uq_a = make_unique<int>(a);
+    auto sh_b = sh_a;cout << "*sh_a: " << *sh_a << endl;
+    auto uq_b = std::move(uq_a);cout << "*uq_a: " << &uq_a << endl;
     return 0;
 }

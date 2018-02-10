@@ -21,7 +21,7 @@ private:
     }
 
     template<typename>
-    friend class sp_wrapper_hash;
+    friend class std::hash;
 
 public:
     shared_ptr_wrapper() = default;
@@ -67,7 +67,7 @@ public:
 };
 
 template<typename U>
-class sp_wrapper_hash
+class std::hash<shared_ptr_wrapper<U>>
 {
 public:
     auto operator()(const shared_ptr_wrapper<U>& sp_U)
