@@ -18,8 +18,8 @@
 class thread_pool
 {
     using taskType = function_wrapper<>;
-    static thread_local std::atomic_bool workThread;
-    std::atomic_bool flag;
+    static thread_local std::atomic_bool __workThread;
+    std::atomic_bool __flag;
     std::vector<std::thread> threads_group;
     moodycamel::ConcurrentQueue<taskType> task_queue;
     
@@ -35,8 +35,8 @@ class thread_pool
 
     void work_thread()
     {
-        workThread = true;
-        while (!flag) {
+        __workThread = true;
+        while (!__flag) {
             run_pending_task();
         }
     }
@@ -45,7 +45,7 @@ class thread_pool
  
 public:
     thread_pool(unsigned int num = std::thread::hardware_concurrency())
-        :flag(false)
+        :__flag(false)
     {
         try {
             for (auto i = 0; i < num; ++i)
@@ -53,14 +53,14 @@ public:
 		    std::thread(&thread_pool::work_thread, this));
 	    threads_group.shrink_to_fit();
         } catch (...) {
-            flag = true;
+            __flag = true;
             throw;
         }
     }
 
     ~thread_pool()
     {
-        flag = true;
+        __flag = true;
         for (auto& thr:threads_group)
             if (thr.joinable())
                 thr.join();
@@ -72,7 +72,7 @@ public:
         using result_type = std::invoke_result_t<FuncType>;
         std::packaged_task<result_type()> task(std::move(func));
         std::future<result_type> ret(task.get_future());
-        if (workThread) {
+        if (__workThread) {
             moodycamel::ProducerToken ptok(task_queue);
             task_queue.enqueue(ptok, std::move(task));
         } else
@@ -82,7 +82,7 @@ public:
 
 };
 
-thread_local std::atomic_bool thread_pool::workThread;
+thread_local std::atomic_bool thread_pool::__workThread;
 
 void terminal(thread_pool& thrp)
 {

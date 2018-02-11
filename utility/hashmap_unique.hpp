@@ -236,8 +236,8 @@ public:
             rcu_read_lock();
             __func(&(node->kvItem));
             rcu_read_unlock();
-            synchronize_rcu();
         }
+        synchronize_rcu();
     }
 
     void for_each(const std::function<void(nodeType)>& __func)
