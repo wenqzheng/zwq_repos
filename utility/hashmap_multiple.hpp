@@ -251,7 +251,6 @@ public:
         rcu_read_unlock();
     }
 
-
     hashmap_iterator begin()
     {
         hashmap_iterator itr(ht);
