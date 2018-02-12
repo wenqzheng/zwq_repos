@@ -207,19 +207,14 @@ int main()
     cout << hex << tmp.tag[3] << dec << endl;
     
 
+    shared_ptr<int> outyn = make_shared<int>(8);
+
+    
+    cout << &outyn << "  "<< outyn.get() << endl;
+    outyn = make_shared<int>(18);
+    cout << &outyn << "  " << outyn.get() << endl;
     
 sleep(5);
-shared_ptr_wrapper<void> ta;
-{
-auto tb = std::make_shared<int>(11);
-cout << "tb.get(): " << tb.get() << endl;
-ta = tb;
-}
-cout << "ta.get(): " << ta.get() << endl;
-auto tc = convert<int>(ta);
-//auto tc = shared_ptr_wrapper<int>(ta);
-cout << "tc.get(): " << tc.get() << endl;
-cout << "*tc: " << *tc << endl;
 
 return 0;
 }

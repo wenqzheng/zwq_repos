@@ -78,6 +78,11 @@ public:
         return m_sp_ptr.get();
     }
 
+    explicit operator bool() const noexcept
+    {
+        return get() != nullptr;
+    }
+
     shared_ptr_wrapper load(std::memory_order order = std::memory_order_seq_cst)
     {
         return std::atomic_load_explicit(&m_sp_ptr, order);
@@ -190,6 +195,11 @@ public:
     void* get() const
     {
         return reinterpret_cast<void*>(m_sp_ptr.get());
+    }
+
+    explicit operator bool() const noexcept
+    {
+        return get() != nullptr;
     }
 
     shared_ptr_wrapper load(std::memory_order order = std::memory_order_seq_cst)
