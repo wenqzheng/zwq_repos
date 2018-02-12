@@ -20,6 +20,7 @@ using namespace std;
 
 struct AA
 {
+
     void front(int a)
     {
         cout << "front from AA: " << a << endl;

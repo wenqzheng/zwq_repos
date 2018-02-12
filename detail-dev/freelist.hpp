@@ -6,6 +6,7 @@
 
 #include "accelerator.hpp"
 #include "tagged_ptr.hpp"
+#include "shared_ptr_wrapper.hpp"
 #include "/root/zwq_repos/utility/noncopyable.hpp"
 #include <limits>
 #include <memory>
@@ -16,152 +17,50 @@
 #include <scoped_allocator>
 #include <atomic>
 
-template <typename T,
-          typename Alloc = std::allocator<T>
-         >
-class freelist_stack:
-    Alloc
+template <typename T, typename Alloc = std::allocator<T>>
+class cache_freelist:Alloc, noncopyable
 {
+
     struct freelist_node
     {
         tagged_ptr<freelist_node> next;
     };
 
-    typedef tagged_ptr<freelist_node> tagged_node_ptr;
-
-    std::atomic_bool dtor_flag;
-
-public:
-    typedef T *           index_t;
-    typedef tagged_ptr<T> tagged_node_handle;
-
-    template <typename Allocator>
-    freelist_stack (Allocator const & alloc, std::size_t n = 0):
-        dtor_flag(false),
-        Alloc(alloc),
-        pool_(tagged_node_ptr(NULL))
-    {
-        for (std::size_t i = 0; i != n; ++i) {
-            T * node = Alloc::allocate(1);
-            if (likely(!dtor_flag))
-                deallocate<true>(node);
-            else
-                destruct<false>(node);
-        }
-
-    }
-
-    template <bool ThreadSafe>
-    void reserve (std::size_t count)
-    {
-        for (std::size_t i = 0; i != count; ++i) {
-            T * node = Alloc::allocate(1);
-            deallocate<ThreadSafe>(node);
-        }
-    }
-
-    template <bool ThreadSafe, bool Bounded>
-    T * construct (void)
-    {
-        T * node = allocate<ThreadSafe, Bounded>();
-        if (node)
-            new(node) T();
-        return node;
-    }
-
-    template <bool ThreadSafe, bool Bounded, typename ArgumentType>
-    T * construct (ArgumentType const & arg)
-    {
-        T * node = allocate<ThreadSafe, Bounded>();
-        if (node)
-            new(node) T(arg);
-        return node;
-    }
-
-    template <bool ThreadSafe, bool Bounded, typename ArgumentType1, typename ArgumentType2>
-    T * construct (ArgumentType1 const & arg1, ArgumentType2 const & arg2)
-    {
-        T * node = allocate<ThreadSafe, Bounded>();
-        if (node)
-            new(node) T(arg1, arg2);
-        return node;
-    }
-
-    template <bool ThreadSafe>
-    void destruct (tagged_node_handle tagged_ptr)
-    {
-        T * n = tagged_ptr.get_ptr();
-        n->~T();
-        deallocate<ThreadSafe>(n);
-    }
-
-    template <bool ThreadSafe>
-    void destruct (T * n)
-    {
-        n->~T();
-        deallocate<ThreadSafe>(n);
-    }
-
-    ~freelist_stack(void)
-    {
-        dtor_flag = true;
-        tagged_node_ptr current = pool_.load();
-
-        while (current) {
-            freelist_node * current_ptr = current.get_ptr();
-            if (current_ptr)
-                current = current_ptr->next;
-            Alloc::deallocate((T*)current_ptr, 1);
-        }
-    }
-
-    bool is_lock_free(void) const
-    {
-        return pool_.is_lock_free();
-    }
-
-    T * get_handle(T * pointer) const
-    {
-        return pointer;
-    }
-
-    T * get_handle(tagged_node_handle const & handle) const
-    {
-        return get_pointer(handle);
-    }
-
-    T * get_pointer(tagged_node_handle const & tptr) const
-    {
-        return tptr.get_ptr();
-    }
-
-    T * get_pointer(T * pointer) const
-    {
-        return pointer;
-    }
-
-    T * null_handle(void) const
-    {
-        return NULL;
-    }
-
-protected: // allow use from subclasses
-    template <bool ThreadSafe, bool Bounded>
-    T * allocate (void)
-    {
-        if (ThreadSafe)
-            return allocate_impl<Bounded>();
-        else
-            return allocate_impl_unsafe<Bounded>();
-    }
+    using tagged_node_ptr = tagged_ptr<freelist_node>;
+    
+    std::atomic<tagged_node_ptr> cache_pool;
 
 private:
-    template <bool Bounded>
-    T * allocate_impl (void)
+    void deallocate_impl(index_t n)
     {
-        tagged_node_ptr old_pool = pool_.load(std::memory_order_consume);
+        void* node = reinterpret_cast<void*>(n);
+        tagged_node_ptr old_pool = cache_pool.load(std::memory_order_consume);
+        freelist_node* new_pool_ptr = reinterpret_cast<freelist_node*>(node);
 
-        for(;;) {
+        do {
+            tagged_node_ptr new_pool(new_pool_ptr, old_pool.get_tag());
+            new_pool->next.set_ptr(old_pool.get_ptr());
+	} while (!cache_pool.compare_exchange_weak(old_pool, new_pool))
+    }
+
+    void deallocate_impl_unsafe(index_t n)
+    {
+        void* node = reinterpret_cast<void*>(n);
+        tagged_node_ptr old_pool = cache_pool.load(std::memory_order_relaxed);
+        freelist_node * new_pool_ptr = reinterpret_cast<freelist_node*>(node);
+
+        tagged_node_ptr new_pool (new_pool_ptr, old_pool.get_tag());
+        new_pool->next.set_ptr(old_pool.get_ptr());
+
+        cache_pool.store(new_pool, std::memory_order_relaxed);
+    }
+
+    template <bool Bounded = false>
+    index_t allocate_impl()
+    {
+        tagged_node_ptr old_pool = cache_pool.load(std::memory_order_consume);
+        
+        do {
             if (!old_pool.get_ptr()) {
                 if (!Bounded)
                     return Alloc::allocate(1);
@@ -169,20 +68,18 @@ private:
                     return 0;
             }
 
-            freelist_node * new_pool_ptr = old_pool->next.get_ptr();
-            tagged_node_ptr new_pool (new_pool_ptr, old_pool.get_next_tag());
-
-            if (pool_.compare_exchange_weak(old_pool, new_pool)) {
-                void * ptr = old_pool.get_ptr();
-                return reinterpret_cast<T*>(ptr);
-            }
-        }
+            freelist_node* new_pool_ptr = old_pool->next.get_ptr();
+            tagged_node_ptr new_pool(new_pool_ptr, old_pool.get_next_tag());
+        } while (!cache_pool.compare_exchange_weak(old_pool, new_pool)
+        
+	void* ptr = old_pool.get_ptr();
+        return reinterpret_cast<T*>(ptr);
     }
 
-    template <bool Bounded>
-    T * allocate_impl_unsafe (void)
+    template <bool Bounded = false>
+    index_t allocate_impl_unsafe()
     {
-        tagged_node_ptr old_pool = pool_.load(std::memory_order_relaxed);
+        tagged_node_ptr old_pool = cache_pool.load(std::memory_order_relaxed);
 
         if (!old_pool.get_ptr()) {
             if (!Bounded)
@@ -191,17 +88,17 @@ private:
                 return 0;
         }
 
-        freelist_node * new_pool_ptr = old_pool->next.get_ptr();
-        tagged_node_ptr new_pool (new_pool_ptr, old_pool.get_next_tag());
+        freelist_node* new_pool_ptr = old_pool->next.get_ptr();
+        tagged_node_ptr new_pool(new_pool_ptr, old_pool.get_next_tag());
 
-        pool_.store(new_pool, std::memory_order_relaxed);
-        void * ptr = old_pool.get_ptr();
+        cache_pool.store(new_pool, std::memory_order_relaxed);
+        void* ptr = old_pool.get_ptr();
         return reinterpret_cast<T*>(ptr);
     }
 
 protected:
-    template <bool ThreadSafe>
-    void deallocate (T * n)
+    template <bool ThreadSafe = true>
+    void deallocate(index_t n)
     {
         if (ThreadSafe)
             deallocate_impl(n);
@@ -209,35 +106,129 @@ protected:
             deallocate_impl_unsafe(n);
     }
 
-private:
-    void deallocate_impl (T * n)
+    template <bool ThreadSafe = true, bool Bounded = false>
+    index_t allocate()
     {
-        void * node = n;
-        tagged_node_ptr old_pool = pool_.load(std::memory_order_consume);
-        freelist_node * new_pool_ptr = reinterpret_cast<freelist_node*>(node);
+        if (ThreadSafe)
+            return allocate_impl<Bounded>();
+        else
+            return allocate_impl_unsafe<Bounded>();
+    }
 
-        for(;;) {
-            tagged_node_ptr new_pool (new_pool_ptr, old_pool.get_tag());
-            new_pool->next.set_ptr(old_pool.get_ptr());
+public:
+    using index_t = T*;
+    using tagged_node_handle = tagged_ptr<T>;
 
-            if (pool_.compare_exchange_weak(old_pool, new_pool))
-                return;
+    cache_freelist():
+	cache_pool(tagged_ptr(NULL, 0))
+    {}
+
+    template <typename Allocator>
+    cache_freelist(const Allocator& alloc, std::size_t n = 1):
+        Alloc(alloc),
+        cache_pool(tagged_node_ptr(NULL))
+    {
+        for (std::size_t i = 0; i < n; ++i) {
+            index_t node = Alloc::allocate(1);
+            destruct<true>(node);
+        }
+
+    }
+
+    template <bool ThreadSafe = true>
+    void reserve(std::size_t count)
+    {
+        for (std::size_t i = 0; i != count; ++i) {
+            T * node = Alloc::allocate(1);
+            deallocate<ThreadSafe>(node);
         }
     }
 
-    void deallocate_impl_unsafe (T * n)
+    template <bool ThreadSafe = true, bool Bounded = false>
+    T * construct()
     {
-        void * node = n;
-        tagged_node_ptr old_pool = pool_.load(std::memory_order_relaxed);
-        freelist_node * new_pool_ptr = reinterpret_cast<freelist_node*>(node);
-
-        tagged_node_ptr new_pool (new_pool_ptr, old_pool.get_tag());
-        new_pool->next.set_ptr(old_pool.get_ptr());
-
-        pool_.store(new_pool, std::memory_order_relaxed);
+        T * node = allocate<ThreadSafe, Bounded>();
+        if (node)
+            new(node) T();
+        return node;
     }
 
-    std::atomic<tagged_node_ptr> pool_;
+    template <bool ThreadSafe = true, bool Bounded = false,
+	typename ArgumentType>
+    T * construct(const ArgumentType& arg)
+    {
+        T * node = allocate<ThreadSafe, Bounded>();
+        if (node)
+            new(node) T(arg);
+        return node;
+    }
+
+    template <bool ThreadSafe, bool Bounded,
+	typename ArgumentType1, typename ArgumentType2>
+    T * construct(const ArgumentType1& arg1, const ArgumentType2& arg2)
+    {
+        T * node = allocate<ThreadSafe, Bounded>();
+        if (node)
+            new(node) T(arg1, arg2);
+        return node;
+    }
+
+    template <bool ThreadSafe = true>
+    void destruct(tagged_node_handle tagged_ptr_f)
+    {
+        index_t n = tagged_ptr_f.get_ptr();
+        n->~T();
+        deallocate<ThreadSafe>(n);
+    }
+
+    template <bool ThreadSafe = true>
+    void destruct(index_t n)
+    {
+        n->~T();
+        deallocate<ThreadSafe>(n);
+    }
+
+    ~cache_freelist()
+    {
+        tagged_node_ptr current = cache_pool.load();
+
+        while (current) {
+            freelist_node* current_ptr = current.get_ptr();
+            if (current_ptr)
+                current = current_ptr->next;
+            Alloc::deallocate(reinterpret_cast<index_t>(current_ptr), 1);
+        }
+    }
+
+    bool is_lock_free() const
+    {
+        return cache_pool.is_lock_free();
+    }
+
+    index_t get_handle(index_t pointer) const
+    {
+        return pointer;
+    }
+
+    index_t get_handle(const tagged_node_handle& handle) const
+    {
+        return get_pointer(handle);
+    }
+
+    index_t get_pointer(const tagged_node_handle& tptr) const
+    {
+        return tptr.get_ptr();
+    }
+
+    index_t get_pointer(index_t pointer) const
+    {
+        return pointer;
+    }
+
+    index_t null_handle() const
+    {
+        return NULL;
+    }
 };
 
 class alignas(4) tagged_index
@@ -246,18 +237,14 @@ public:
     typedef std::uint16_t tag_t;
     typedef std::uint16_t index_t;
 
-    /** uninitialized constructor */
-    tagged_index(void) noexcept = default; //: index(0), tag(0)
+    tagged_index() noexcept = default;
 
-    /** copy constructor */
     tagged_index(tagged_index const & rhs) = default;
 
     explicit tagged_index(index_t i, tag_t t = 0):
         index(i), tag(t)
     {}
 
-    /** index access */
-    /* @{ */
     index_t get_index() const
     {
         return index;
@@ -267,10 +254,7 @@ public:
     {
         index = i;
     }
-    /* @} */
-
-    /** tag access */
-    /* @{ */
+    
     tag_t get_tag() const
     {
         return tag;
@@ -286,14 +270,13 @@ public:
     {
         tag = t;
     }
-    /* @} */
 
-    bool operator==(tagged_index const & rhs) const
+    bool operator==(const tagged_index& rhs) const
     {
         return (index == rhs.index) && (tag == rhs.tag);
     }
 
-    bool operator!=(tagged_index const & rhs) const
+    bool operator!=(const tagged_index& rhs) const
     {
         return !operator==(rhs);
     }
@@ -303,23 +286,20 @@ protected:
     tag_t tag;
 };
 
-template <typename T,
-          std::size_t size>
+template <typename T, std::size_t size>
 struct compiletime_sized_freelist_storage
 {
-    // array-based freelists only support a 16bit address space.
     static_assert(size < 65536);
 
-    std::array<char, size * sizeof(T) + 64> data;
+    std::array<char, size * sizeof(T) + 64> arrT;
 
-    // unused ... only for API purposes
     template <typename Allocator>
-    compiletime_sized_freelist_storage(Allocator const & /* alloc */, std::size_t /* count */)
+    compiletime_sized_freelist_storage(const Allocator&, std::size_t)
     {}
 
-    T * nodes(void) const
+    T * nodes() const
     {
-        char * data_pointer = const_cast<char*>(data.data());
+        char* data_pointer = const_cast<char*>(arrT.data());
         return reinterpret_cast<T*>((reinterpret_cast<std::size_t>(data_pointer) + CACHE_LINE_SIZE - 1) & ~(CACHE_LINE_SIZE - 1));
     }
 
@@ -329,14 +309,11 @@ struct compiletime_sized_freelist_storage
     }
 };
 
-template <typename T,
-          typename Alloc = std::allocator<T> >
+template <typename T, typename Alloc = std::allocator<T> >
 struct runtime_sized_freelist_storage:
-    std::scoped_allocator_adaptor< std::aligned_storage<sizeof(T), CACHE_LINE_SIZE>, Alloc>
-    //boost::alignment::aligned_allocator_adaptor<Alloc, CACHE_LINE_SIZE >
+    aligned_allocator_adaptor<Alloc, CACHE_LINE_SIZE>
 {
-    typedef std::scoped_allocator_adaptor< std::aligned_storage<sizeof(T), CACHE_LINE_SIZE>, Alloc> allocator_type;
-    //typedef boost::alignment::aligned_allocator_adaptor<Alloc, CACHE_LINE_SIZE > allocator_type;
+    aligned_allocator_adaptor<Alloc, CACHE_LINE_SIZE > allocator_type;
     T * nodes_;
     std::size_t node_count_;
 
@@ -365,13 +342,9 @@ struct runtime_sized_freelist_storage:
 };
 
 
-template <typename T,
-          typename NodeStorage = runtime_sized_freelist_storage<T>
-         >
-class fixed_size_freelist:
-    NodeStorage
+template <typename T, typename NodeStorage = runtime_sized_freelist_storage<T>>
+class fixed_size_freelist:NodeStorage
 {
-    std::atomic_bool dtor_flag;
     struct freelist_node
     {
         tagged_index next;
@@ -410,12 +383,7 @@ public:
         initialize();
     }
 
-    ~fixed_size_freelist()
-    {
-        dtor_flag = true;
-    }
-
-    template <bool ThreadSafe, bool Bounded>
+    template <bool ThreadSafe = true, bool Bounded = false>
     T * construct (void)
     {
         index_t node_index = allocate<ThreadSafe>();
@@ -439,7 +407,8 @@ public:
         return node;
     }
 
-    template <bool ThreadSafe, bool Bounded, typename ArgumentType1, typename ArgumentType2>
+    template <bool ThreadSafe, bool Bounded,
+	typename ArgumentType1, typename ArgumentType2>
     T * construct (ArgumentType1 const & arg1, ArgumentType2 const & arg2)
     {
         index_t node_index = allocate<ThreadSafe>();
@@ -456,7 +425,7 @@ public:
     {
         index_t index = tagged_index.get_index();
         T * n = NodeStorage::nodes() + index;
-        (void)n; // silence msvc warning
+        (void)n;
         n->~T();
         deallocate<ThreadSafe>(index);
     }
@@ -608,7 +577,7 @@ struct select_freelist
 
     typedef typename std::conditional_t<IsCompileTimeSized || IsFixedSize,
                                fixed_size_freelist<T, fixed_sized_storage_type>,
-                               freelist_stack<T, Alloc>
+                               cache_freelist<T, Alloc>
                               > type;
 };
 
