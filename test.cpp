@@ -260,6 +260,8 @@ auto lmd = [](auto&& obj) {
 };
 
 shared_ptr_wrapper<int> tmp11 = make_shared<int>(88);
+cout<< "is shared_ptr_wrapper lock free? " << atomic_is_lock_free(reinterpret_cast<shared_ptr<void>*>(&tmp11)) << endl;
+cout << "alignment of: " << alignment_of_v<shared_ptr_wrapper<int>> << endl;
 shared_ptr_wrapper<int> tmp12 = make_shared<int>(44);
 shared_ptr_wrapper<int> tmp(tmp11);
 weak_ptr_wrapper<void> newwp(tmp11);

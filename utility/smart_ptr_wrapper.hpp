@@ -26,7 +26,7 @@ public:
 };
 
 template<typename T>
-class shared_ptr_wrapper
+class alignas(sizeof(std::shared_ptr<void>)) shared_ptr_wrapper
 {
 private:
     std::shared_ptr<T> m_sp_ptr;
@@ -233,7 +233,7 @@ public:
 };
 
 template<>
-class shared_ptr_wrapper<void>
+class alignas(sizeof(std::shared_ptr<void>)) shared_ptr_wrapper<void>
 {
 private:
     std::shared_ptr<void> m_sp_ptr;
@@ -426,7 +426,7 @@ public:
 
 
 template<typename T>
-class weak_ptr_wrapper
+class alignas(sizeof(std::weak_ptr<void>)) weak_ptr_wrapper
 {
 private:
     std::weak_ptr<T> m_wp_ptr;
