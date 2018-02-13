@@ -126,23 +126,20 @@ public:
 
     template<typename U>
     shared_ptr_wrapper(shared_ptr_wrapper<U>&& sp):
-        m_sp_ptr(
-            std::move(*reinterpret_cast<std::shared_ptr<T>*>(&sp)))
+        m_sp_ptr(std::move(*reinterpret_cast<std::shared_ptr<T>*>(&sp)))
     {}
 
     template<typename U>
     shared_ptr_wrapper& operator=(const shared_ptr_wrapper<U>& sp)
     {
-        m_sp_ptr =
-            *reinterpret_cast<const std::shared_ptr<T>*>(&sp);
+        m_sp_ptr = *reinterpret_cast<const std::shared_ptr<T>*>(&sp);
         return *this;
     }
 
     template<typename U>
     shared_ptr_wrapper& operator=(shared_ptr_wrapper<U>&& sp)
     {
-        m_sp_ptr =
-            std::move(*reinterpret_cast<std::shared_ptr<T>*>(&sp));
+        m_sp_ptr = std::move(*reinterpret_cast<std::shared_ptr<T>*>(&sp));
         return *this;
     }
 
@@ -191,46 +188,46 @@ public:
     }
 
     shared_ptr_wrapper(const T* t):
-        m_sp_ptr(std::shared_ptr<T>(t))
+        m_sp_ptr(t)
     {}
 
     shared_ptr_wrapper(T* t):
-        m_sp_ptr(std::shared_ptr<T>(t))
+        m_sp_ptr(t)
     {}
 
     shared_ptr_wrapper& operator=(const T* t)
     {
-        m_sp_ptr = std::shared_ptr<T>(t);
+        m_sp_ptr = std::move(std::shared_ptr<T>(t));
         return *this;
     }
 
     shared_ptr_wrapper& operator=(T* t)
     {
-        m_sp_ptr = std::shared_ptr<T>(t);
+        m_sp_ptr = std::move(std::shared_ptr<T>(t));
         return *this;
     }
 
     template<typename U>
     shared_ptr_wrapper(const U* u):
-        m_sp_ptr(std::shared_ptr<T>(reinterpret_cast<const T*>(u)))
+        m_sp_ptr(reinterpret_cast<const T*>(u))
     {}
 
     template<typename U>
     shared_ptr_wrapper(U* u):
-        m_sp_ptr(std::shared_ptr<T>(reinterpret_cast<T*>(u)))
+        m_sp_ptr(reinterpret_cast<T*>(u))
     {}
 
     template<typename U>
     shared_ptr_wrapper& operator=(const U* u)
     {
-        m_sp_ptr = std::shared_ptr<T>(reinterpret_cast<const T*>(u));
+        m_sp_ptr = std::move(std::shared_ptr<T>(reinterpret_cast<const T*>(u)));
         return *this;
     }
 
     template<typename U>
     shared_ptr_wrapper& operator=(U* u)
     {
-        m_sp_ptr = std::shared_ptr<T>(reinterpret_cast<T*>(u));
+        m_sp_ptr = std::move(std::shared_ptr<T>(reinterpret_cast<T*>(u)));
         return *this;
     }
 
@@ -437,6 +434,26 @@ public:
         return *this;
     }
 
+    shared_ptr_wrapper(const void* v):
+	m_sp_ptr(v)
+    {}
+
+    shared_ptr_wrapper(void* v):
+	m_sp_ptr(v)
+    {}
+
+    shared_ptr_wrapper operator=(const void* v)
+    {
+        m_sp_ptr = std::move(std::shared_ptr<void>(v));
+	return *this;
+    }
+
+    shared_ptr_wrapper operator=(void* v)
+    {
+        m_sp_ptr = std::move(std::shared_ptr<void>(v));
+	return *this;
+    }
+
     template<typename U>
     shared_ptr_wrapper(const U* u):
         m_sp_ptr(reinterpret_cast<const void*>(u))
@@ -450,14 +467,16 @@ public:
     template<typename U>
     shared_ptr_wrapper& operator=(const U* u)
     {
-        m_sp_ptr = std::shared_ptr<void>(reinterpret_cast<const void*>(u));
+        m_sp_ptr = std::move(
+	    std::shared_ptr<void>(reinterpret_cast<const void*>(u)));
         return *this;
     }
 
     template<typename U>
     shared_ptr_wrapper& operator=(U* u)
     {
-        m_sp_ptr = std::move(std::shared_ptr<void>(reinterpret_cast<void*>(u)));
+        m_sp_ptr = std::move(
+	    std::shared_ptr<void>(reinterpret_cast<void*>(u)));
         return *this;
     }
 
