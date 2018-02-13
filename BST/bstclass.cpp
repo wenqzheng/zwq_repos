@@ -289,25 +289,24 @@ public:
 
     void helpinsert(const shared_ptr_wrapper<relinfo>& __record)
     {
-        shared_ptr_wrapper<entity> parent;
-        shared_ptr_wrapper<entity> leaf;
-        shared_ptr_wrapper<entity> subtree;
-
-        parent = __record->parent;
-        leaf = __record->leaf;
-        subtree = __record->subtree;
-
         shared_ptr_wrapper<updateflag> dirty =
             std::make_shared<updateflag>(true, __record);
         shared_ptr_wrapper<updateflag> clean =
             std::make_shared<updateflag>(false, __record);
 
-        if (__lessexp<dataType>()(subtree->data, parent->data))
-            parent->node.left.cas_strong(leaf, subtree);
-        else
-            parent->node.right.cas_strong(leaf, subtree);
-
-        __record->parent->node.update.cas_strong(dirty, clean);
+        do {
+            shared_ptr_wrapper<entity> parent = __record->parent;
+            shared_ptr_wrapper<entity> leaf = __record->leaf;
+            shared_ptr_wrapper<entity> subtree = __record->subtree;
+	    shared_ptr_wrapper<entity>* tochange;
+            
+	    do {
+                if (__lessexp<dataType>()(subtree->data, parent->data))
+                    tochange = &(parent->node.left);
+		else
+		    tochange = &(parent->node.right);
+	    } while (!tochange->cas_weak(leaf, subtree));
+	} while (!__record->parent->node.update.cas_weak(dirty, clean));
     }
 };
 
