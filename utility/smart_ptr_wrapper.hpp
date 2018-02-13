@@ -434,26 +434,6 @@ public:
         return *this;
     }
 
-    shared_ptr_wrapper(const void* v):
-	m_sp_ptr(v)
-    {}
-
-    shared_ptr_wrapper(void* v):
-	m_sp_ptr(v)
-    {}
-
-    shared_ptr_wrapper operator=(const void* v)
-    {
-        m_sp_ptr = std::move(std::shared_ptr<void>(v));
-	return *this;
-    }
-
-    shared_ptr_wrapper operator=(void* v)
-    {
-        m_sp_ptr = std::move(std::shared_ptr<void>(v));
-	return *this;
-    }
-
     template<typename U>
     shared_ptr_wrapper(const U* u):
         m_sp_ptr(reinterpret_cast<const void*>(u))
