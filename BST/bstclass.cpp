@@ -6,6 +6,7 @@
 #include "../utility/smart_ptr_wrapper.hpp"
 #include <utility>
 #include <algorithm>
+#include <optional>
 #include <atomic>
 #include <cstdint>
 #include <climits>
@@ -141,13 +142,16 @@ class bstree
     class entity
     {
     public:
-        virtual bool isLeaf() = 0;
+	virtual bool isLeaf()
+	{
+	    return false;
+	}
     };
 
     class leafnode:entity
     {
     public:
-        __VAR data;
+	__VAR data;
 
         leafnode(const leafnode& __leaf):
             data(__leaf.data)
@@ -178,7 +182,7 @@ class bstree
     class internalnode:entity
     {
     public:
-        __VAR data;
+	__VAR data;
         shared_ptr_wrapper<entity> left;
         shared_ptr_wrapper<entity> right;
         shared_ptr_wrapper<updateflag> update;
@@ -200,11 +204,6 @@ class bstree
             right(__right),
             update(__update)
         {}
-
-        bool isLeaf()
-        {
-            return false;
-        }
     };
    
     class entityinfo
@@ -432,7 +431,7 @@ public:
         }
     }
 
-    void helpinsert(const shared_ptr_wrapper<insertinfo>& __iinfo)
+    void helpinsert(shared_ptr_wrapper<insertinfo> __iinfo)
     {
         cas_child(__iinfo->parent, __iinfo->leaf, __iinfo->newinternal);
 	shared_ptr_wrapper<updateflag> __iflag =
@@ -442,14 +441,14 @@ public:
         __iinfo->parent->update.cas_strong(__iflag, __cflag);
     }
 
-    inline bool helpdelete(const shared_ptr_wrapper<deleteinfo>& __dinfo)
+    inline bool helpdelete(shared_ptr_wrapper<deleteinfo> __dinfo)
     {
         shared_ptr_wrapper<updateflag> __mflag =
-	    std::make_shared<updatefalg>(0x1000, __dinfo)
+	    std::make_shared<updateflag>(0x1000, __dinfo);
 	shared_ptr_wrapper<updateflag> __dflag =
-	    std::make_shared<updatefalg>(0x10, __dinfo)
+	    std::make_shared<updateflag>(0x10, __dinfo);
         shared_ptr_wrapper<updateflag> __cflag =
-	    std::make_shared<updatefalg>(0x1, __dinfo)
+	    std::make_shared<updateflag>(0x1, __dinfo);
 
         if (__dinfo->parent->update.cas_strong(__dinfo->pupdate, __mflag)) {
             helpmarked(__dinfo);
@@ -461,7 +460,7 @@ public:
         }
     }
 
-    inline void helpmarked(const shared_ptr_wrapper<deleteinfo>& __dinfo)
+    inline void helpmarked(shared_ptr_wrapper<deleteinfo> __dinfo)
     {
         shared_ptr_wrapper<updateflag> __dflag =
             std::make_shared<updateflag>(0x10, __dinfo);
@@ -478,7 +477,7 @@ public:
         __dinfo->grandpa->update.cas_strong(__dflag, __cflag);
     }
 
-    inline void help(const shared_ptr_wrapper<updateflag>& update)
+    inline void help(shared_ptr_wrapper<updateflag> update)
     {
         if (update->isIflag())
             helpinsert(update->info);
@@ -488,11 +487,13 @@ public:
             helpdelete(update->info);
     }
 
-    inline void cas_child(const shared_ptr_wrapper<internalnode>& parent,
-        const shared_ptr_wrapper<entity>& oldentity,
-        const shared_ptr_wrapper<entity>& newentity)
+    inline void cas_child(shared_ptr_wrapper<internalnode> parent,
+        shared_ptr_wrapper<entity> oldentity,
+        shared_ptr_wrapper<entity> newentity)
     {
-        if (__lessexp<dataType>()(newentity->data, parent->data))
+        if (__lessexp<dataType>()(
+	    (*reinterpret_cast<shared_ptr_wrapper<leafnode>*>(&newentity))->data,
+	    parent->data))
             parent->left.cas_strong(oldentity, newentity);
         else
             parent->right.cas_strong(oldentity, newentity);
