@@ -379,9 +379,10 @@ public:
                 __iinfo =
                     std::make_shared<insertinfo>(parent, leaf, newinternal);
 
-                if (parent->update.cas_strong(pupdate,
-                    shared_ptr_wrapper<updateflag>(
-                        std::make_shared<updateflag>(0x100, __iinfo)))) {
+		shared_ptr_wrapper<updateflag> __iflag =
+                        std::make_shared<updateflag>(0x100, __iinfo);
+ 
+                if (parent->update.cas_strong(pupdate, __iflag)) {
                     helpinsert(__iinfo.load());
                     return true;
                 } else
@@ -389,7 +390,6 @@ public:
             }
         }
     }
-
 
     bool remove(const dataType& __data)
     {
@@ -420,10 +420,11 @@ public:
                 __dinfo = std::make_shared<deleteinfo>(
                     grandpa, parent, leaf, pupdate);
 
-                if (grandpa->update.cas_strong(gpupdate,
-                    shared_ptr_wrapper<updateflag>(
-                        std::make_shared<updateflag>(0x10, __dinfo)))) {
-                    if (helpdelete(__dinfo.load))
+		shared_ptr_wrapper<updateflag> __dflag =
+		    std::make_shared<updateflag>(0x10, __dinfo);
+
+                if (grandpa->update.cas_strong(gpupdate, __dflag)) {
+                    if (helpdelete(__dinfo.load()))
                         return true;
                 } else
                     help(grandpa->update.load());
@@ -434,33 +435,39 @@ public:
     void helpinsert(const shared_ptr_wrapper<insertinfo>& __iinfo)
     {
         cas_child(__iinfo->parent, __iinfo->leaf, __iinfo->newinternal);
-        __iinfo->parent->update.cas_strong(
-            shared_ptr_wrapper<updateflag>(
-                std::make_shared<updateflag>(0x100, __iinfo)),
-            shared_ptr_wrapper<updateflag>(
-                std::make_shared<updateflag>(0x1, __iinfo)));
+	shared_ptr_wrapper<updateflag> __iflag =
+	    std::make_shared<updateflag>(0x100, __iinfo);
+	shared_ptr_wrapper<updateflag> __cflag =
+	    std::make_shared<updateflag>(0x1, __iinfo);
+        __iinfo->parent->update.cas_strong(__iflag, __cflag);
     }
 
     inline bool helpdelete(const shared_ptr_wrapper<deleteinfo>& __dinfo)
     {
-        if (__dinfo->parent->update.cas_strong(__dinfo->pupdate,
-            shared_ptr_wrapper<updateflag>(
-                std::make_shared<updateflag>(0x1000, __dinfo)))) {
+        shared_ptr_wrapper<updateflag> __mflag =
+	    std::make_shared<updatefalg>(0x1000, __dinfo)
+	shared_ptr_wrapper<updateflag> __dflag =
+	    std::make_shared<updatefalg>(0x10, __dinfo)
+        shared_ptr_wrapper<updateflag> __cflag =
+	    std::make_shared<updatefalg>(0x1, __dinfo)
+
+        if (__dinfo->parent->update.cas_strong(__dinfo->pupdate, __mflag)) {
             helpmarked(__dinfo);
             return true;
         } else {
             help(__dinfo->parent->update);
-            __dinfo->grandpa->update.cas_strong(
-                shared_ptr_wrapper<updateflag>(
-                    std::make_shared<updateflag>(0x10, __dinfo)),
-                shared_ptr_wrapper<updateflag>(
-                    std::make_shared<updateflag>(0x1, __dinfo)));
+            __dinfo->grandpa->update.cas_strong(__dflag, __cflag);
             return false;
         }
     }
 
     inline void helpmarked(const shared_ptr_wrapper<deleteinfo>& __dinfo)
     {
+        shared_ptr_wrapper<updateflag> __dflag =
+            std::make_shared<updateflag>(0x10, __dinfo);
+        shared_ptr_wrapper<updateflag> __cflag =
+            std::make_shared<updateflag>(0x1, __dinfo);
+
         if (__dinfo->parent->right->isLeaf())
             cas_child(__dinfo->grandpa, __dinfo->parent,
                 __dinfo->parent->left);
@@ -468,11 +475,7 @@ public:
             cas_child(__dinfo->grandpa, __dinfo->parent,
                 __dinfo->parent->right);
 
-        __dinfo->grandpa->update.cas_strong(
-            shared_ptr_wrapper<updateflag>(
-                std::make_shared<updateflag>(0x10, __dinfo)),
-            shared_ptr_wrapper<updateflag>(
-                std::make_shared<updateflag>(0x1, __dinfo)));
+        __dinfo->grandpa->update.cas_strong(__dflag, __cflag);
     }
 
     inline void help(const shared_ptr_wrapper<updateflag>& update)

@@ -304,31 +304,7 @@ public:
     }
 
     template<typename U1, typename U2>
-    bool cas_weak(shared_ptr_wrapper<U1>&& expected,
-        shared_ptr_wrapper<U2> desired,
-        std::memory_order success = std::memory_order_seq_cst,
-        std::memory_order failure = std::memory_order_seq_cst)
-    {
-        return std::atomic_compare_exchange_weak_explicit(&m_sp_ptr,
-            reinterpret_cast<std::shared_ptr<T>*>(&expected),
-            *reinterpret_cast<std::shared_ptr<T>*>(&desired),
-            success, failure);
-    }
-
-    template<typename U1, typename U2>
     bool cas_strong(shared_ptr_wrapper<U1>& expected,
-        shared_ptr_wrapper<U2> desired,
-        std::memory_order success = std::memory_order_seq_cst,
-        std::memory_order failure = std::memory_order_seq_cst)
-    {
-        return std::atomic_compare_exchange_strong_explicit(&m_sp_ptr,
-            reinterpret_cast<std::shared_ptr<T>*>(&expected),
-            *reinterpret_cast<std::shared_ptr<T>*>(&desired),
-            success, failure);
-    }
-
-    template<typename U1, typename U2>
-    bool cas_strong(shared_ptr_wrapper<U1>&& expected,
         shared_ptr_wrapper<U2> desired,
         std::memory_order success = std::memory_order_seq_cst,
         std::memory_order failure = std::memory_order_seq_cst)
@@ -550,31 +526,7 @@ public:
     }
 
     template<typename U1, typename U2>
-    bool cas_weak(shared_ptr_wrapper<U1>&& expected,
-        shared_ptr_wrapper<U2> desired,
-        std::memory_order success = std::memory_order_seq_cst,
-        std::memory_order failure = std::memory_order_seq_cst)
-    {
-        return std::atomic_compare_exchange_weak_explicit(&m_sp_ptr,
-            reinterpret_cast<std::shared_ptr<void>*>(&expected),
-            *reinterpret_cast<std::shared_ptr<void>*>(&desired),
-            success, failure);
-    }
-
-    template<typename U1, typename U2>
     bool cas_strong(shared_ptr_wrapper<U1>& expected,
-        shared_ptr_wrapper<U2> desired,
-        std::memory_order success = std::memory_order_seq_cst,
-        std::memory_order failure = std::memory_order_seq_cst)
-    {
-        return std::atomic_compare_exchange_strong_explicit(&m_sp_ptr,
-            reinterpret_cast<std::shared_ptr<void>*>(&expected),
-            *reinterpret_cast<std::shared_ptr<void>*>(&desired),
-            success, failure);
-    }
-
-    template<typename U1, typename U2>
-    bool cas_strong(shared_ptr_wrapper<U1>&& expected,
         shared_ptr_wrapper<U2> desired,
         std::memory_order success = std::memory_order_seq_cst,
         std::memory_order failure = std::memory_order_seq_cst)
@@ -930,35 +882,7 @@ public:
     }
 
     template<typename U1, typename U2>
-    bool cas_weak(weak_ptr_wrapper<U1>&& expected,
-        weak_ptr_wrapper<U2> desired,
-        std::memory_order success = std::memory_order_seq_cst,
-        std::memory_order failure = std::memory_order_seq_cst)
-    {
-        return std::atomic_compare_exchange_weak_explicit(
-            reinterpret_cast<std::shared_ptr<T>*>(&m_wp_ptr),
-            reinterpret_cast<std::shared_ptr<T>*>(&(expected.m_wp_ptr)),
-            *reinterpret_cast<std::shared_ptr<T>*>(&(desired.m_wp_ptr)),
-            success,
-            failure);
-    }
-
-    template<typename U1, typename U2>
     bool cas_strong(weak_ptr_wrapper<U1>& expected,
-        weak_ptr_wrapper<U2> desired,
-        std::memory_order success = std::memory_order_seq_cst,
-        std::memory_order failure = std::memory_order_seq_cst)
-    {
-         return std::atomic_compare_exchange_strong_explicit(
-            reinterpret_cast<std::shared_ptr<T>*>(&m_wp_ptr),
-            reinterpret_cast<std::shared_ptr<T>*>(&(expected.m_wp_ptr)),
-            *reinterpret_cast<std::shared_ptr<T>*>(&(desired.m_wp_ptr)),
-            success,
-            failure);
-    }
-
-    template<typename U1, typename U2>
-    bool cas_strong(weak_ptr_wrapper<U1>&& expected,
         weak_ptr_wrapper<U2> desired,
         std::memory_order success = std::memory_order_seq_cst,
         std::memory_order failure = std::memory_order_seq_cst)
