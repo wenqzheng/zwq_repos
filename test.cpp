@@ -74,37 +74,11 @@ int GT()
     return 5;
 }
 
-template<typename dataType>
-struct Inf0
-{};
-
-template<typename dataType>
-struct Inf1
-{};
-
-template<typename U>
-class lessme
+class SP1
 {
 public:
-    constexpr bool operator()(const U& _u1, const U& _u2) const
-    {
-        return std::less<U>()(_u1, _u2);
-    }
-
-    constexpr bool operator()(const U&, const Inf0<U>&) const
-    {
-        return true;
-    }
-
-    constexpr bool operator()(const U&, const Inf1<U>&) const
-    {
-        return true;
-    }
-
-    constexpr bool operator()(const Inf0<U>&, const Inf1<U>&) const
-    {
-        return true;
-    }
+    shared_ptr_wrapper<int> SP2;
+    shared_ptr_wrapper<string> SP3;
 };
 
 int main()
@@ -247,6 +221,9 @@ variant<int,string> a("zwq");
 string s = "OK";
 variant<int,string> b = variant<int, string>(s);
 cout << b.index() << endl;
+
+auto sp1 = make_shared<SP1>();
+sp1->SP2 = make_shared<int>(88);
 
 return 0;
 }

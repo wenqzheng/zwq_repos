@@ -241,7 +241,6 @@ public:
 
     bool insert(const dataType& __data)
     {
-        __VAR __data_imp = __data;
         shared_ptr_wrapper<entity> parent;
         shared_ptr_wrapper<entity> self;
         shared_ptr_wrapper<entity> sibling;
@@ -258,7 +257,7 @@ public:
             self = search->self;
             shared_ptr_wrapper<updateflag> pupdate = search->pupdate;
 
-            if (__equalexp<dataType>()(self->data, __data_imp))
+            if (__equalexp<dataType>()(self->data, __data))
                 return false;
             if (pupdate->isDirty)
                 helpinsert(pupdate->info);
@@ -266,11 +265,13 @@ public:
                 sibling = std::make_shared<entity>(self->data, treenode(true));
                 if (__lessexp<dataType>()(newentity->data, sibling->data))
                     newinternal = std::make_shared<entity>(
-                        std::max(__data_imp, self->data, __lessexp<dataType>()),
+                        std::max(__VAR(__data), self->data,
+			    __lessexp<dataType>()),
                         treenode(false, newentity, sibling));
                 else
                     newinternal = std::make_shared<entity>(
-                        std::max(__data_imp, self->data, __lessexp<dataType>()),
+                        std::max(__VAR(__data), self->data,
+			    __lessexp<dataType>()),
                         treenode(false, sibling, newentity));
                 record = std::make_shared<relinfo>(parent, self, newinternal);
 
@@ -313,7 +314,7 @@ public:
 int main()
 {
     bstree<int> bst;
-//    bst.insert(4);
+    bst.insert(4);
 //    bst.insert(8);
 //    bst.insert(1);
 //    bst.insert(2);

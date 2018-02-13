@@ -86,5 +86,11 @@ bool NonBlockingBST::CASChild(treeNode *parent, treeNode *oldNode, treeNode *new
 int main()
 {
     NonBlockingBST bst;
+    bst.insert(1);
+    bst.insert(2);
     bst.insert(4);
+    bst.insert(8);
+    bst.insert(9);
+//    std::cout << bst.insert(4) << std::endl;
+//    std::cout << bst.search(5)->l.load()->data << std::endl;
 }
