@@ -230,10 +230,18 @@ cout << *(sp1->SP2) << endl;
 atomic_bool atbl = true;
 cout << atbl << endl;
 
-std::atomic_uint64_t aut = 0x1;
+int paaa = 88;
+shared_ptr_wrapper<int> spaaa(&paaa);
+int pbbb = 44;
+shared_ptr_wrapper<int> spbbb(&pbbb);
+cout << "paaa: " << paaa << endl << "pbbb: " << pbbb << endl;
+cout << "spaaa-> " << *spaaa << endl << "spbbb-> " << *spbbb << endl;
+cout << spaaa.get() << endl << spbbb.get() << endl;
+spaaa.cas_strong(spbbb, spbbb);
+cout << "paaa: " << paaa << endl << "pbbb: " << pbbb << endl;
+cout << "spaaa-> " << *spaaa << endl << "spbbb-> " << *spbbb << endl;
+cout << spaaa.get() << endl << spbbb.get() << endl;
 
-bool bux = aut & 0x1;
-cout << bux << endl;
 
 return 0;
 }
