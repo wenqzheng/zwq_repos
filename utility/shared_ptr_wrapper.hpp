@@ -46,7 +46,7 @@ public:
         std::atomic_store(&m_sp_ptr, sp);
 	    return *this;
     }
- 
+
     shared_ptr_wrapper(const T& t)
         :shared_ptr_wrapper(std::make_shared<T>(t))
     {}
@@ -54,6 +54,16 @@ public:
     shared_ptr_wrapper(T&& t)
         :shared_ptr_wrapper(std::make_shared<T>(std::forward<T>(t)))
     {}
+
+    shared_ptr_wrapper(std::nullptr_t)
+       :m_sp_ptr(nullptr)
+    {}
+
+    shared_ptr_wrapper& operator=(std::nullptr_t)
+    {
+        m_sp_ptr = nullptr;
+        return *this;
+    }
 
     T& operator*() const
     {

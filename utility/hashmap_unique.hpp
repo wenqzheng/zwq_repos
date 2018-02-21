@@ -126,7 +126,7 @@ public:
         unsigned long hash = hash_fn(node->kvItem.first);
 
         rcu_read_lock();
-        cds_lfht_add(ht, hash, &node->node);
+        cds_lfht_add_unique(ht, hash, match, &(kvpair.first), &node->node);
         rcu_read_unlock();
     }
 

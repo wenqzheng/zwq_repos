@@ -78,3 +78,11 @@ public:
         return __func(args...);
     }
 };
+/*
+auto IoC = [&ioc](auto f){
+    return [=](auto... args) {
+        ioc.regedit<f,decltype(args)...>(str);
+        return ioc.resolve<f,args...>
+    }
+}
+*/
