@@ -6,6 +6,7 @@
 
 #include "shared_ptr_wrapper.hpp"
 #include <cassert>
+#include <thread>
 #include <cstddef>
 #include <iterator>
 #include <utility>
@@ -13,6 +14,8 @@
 #include <urcu-bp.h>
 #include <urcu/rculfhash.h>
 
+#define likely(x) __builtin_expect(!!(x),1)
+#define unlikely(x) __builtin_expect(!!(x),0)
 
 template<typename keyType, typename valueType,
     class hashFunc = std::hash<keyType>>
@@ -149,10 +152,17 @@ public:
         if (ht_node) {
             found = true;
             ret = cds_lfht_del(ht, ht_node);
-            if (!ret) {
+            if (likely(!ret)) {
                 mynode* del_node = caa_container_of(ht_node, mynode, node);
                 call_rcu(&del_node->rcu_head, free_node);
                 deleted = true;
+            } else {
+                std::this_thread::yield();
+                cds_lfht_node* tmp_node = cds_lfht_iter_get_node(&iter);
+                if (!tmp_node)
+                    deleted = true;
+                else
+                    found = false;
             }
         } else {
             found = false;
@@ -186,6 +196,19 @@ public:
         itr.iter = iter;
         return itr;
     }
+    
+    void for_each(const std::function<void(nodeType*)>& __func)
+    {
+        struct mynode* node;
+        cds_lfht_iter iter;
+        cds_lfht_node* ht_node;
+
+        rcu_read_lock();
+        cds_lfht_for_each_entry(ht, &iter, node, node) {
+            __func(&(node->kvItem));
+        }
+        rcu_read_unlock();
+    }
 
     void for_each(const std::function<void(nodeType)>& __func)
     {
@@ -199,6 +222,7 @@ public:
         }
         rcu_read_unlock();
     }
+
 
     hashmap_iterator begin()
     {
