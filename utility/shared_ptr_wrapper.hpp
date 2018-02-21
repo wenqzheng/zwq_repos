@@ -7,6 +7,7 @@
 #include <memory>
 #include <atomic>
 #include <cstddef>
+#include <type_traits>
 #include <functional>                       // std::hash
 
 template<typename T>
@@ -45,20 +46,26 @@ public:
         std::atomic_store(&m_sp_ptr, sp);
 	    return *this;
     }
-
+/*    
+    template<typename>
+    std::enable_if_t<!std::is_void_v<T>>
     shared_ptr_wrapper(const T& t)
         :shared_ptr_wrapper(std::make_shared<T>(t))
     {}
 
+    template<typename>
+    std::enable_if_t<!std::is_void_v<T>>
     shared_ptr_wrapper(T&& t)
         :shared_ptr_wrapper(std::make_shared<T>(std::forward<T>(t)))
     {}
 
-    T& operator*() const
+    template<typename>
+    std::enable_if_t<!std::is_void_v<T>, std::reference_wrapper<T>>
+    operator*() const
     {
         return *m_sp_ptr;
     }
-
+*/
     T* operator->() const
     {
         return m_sp_ptr.get();

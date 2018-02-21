@@ -314,9 +314,7 @@ cout << "() 4----" << endl;
     auto uq_a = make_unique<int>(a);
     auto sh_b = sh_a;cout << "*sh_a: " << *sh_a << endl;
     auto uq_b = std::move(uq_a);cout << "*uq_a: " << &uq_a << endl;
+    
     hashmap<int,int> hmap;
-    for (auto i = 0; i < 100000; ++i)
-        hmap.insert(i, i*7);
-    cout << hmap.size() << endl;
     return 0;
 }
