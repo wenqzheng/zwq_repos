@@ -62,39 +62,38 @@ public:
         cds_lfht_destroy(ht, NULL);
     }
 
-    class iterator:public std::iterator<std::input_iterator_tag, valueType,
-        std::ptrdiff_t, valueType*, valueType&>
+    class hashmap_iterator:public std::iterator<std::input_iterator_tag,
+        valueType, std::ptrdiff_t, valueType*, valueType&>
     {
-        struct mynode* pos;
         cds_lfht* ht;
 
     public:
         cds_lfht_iter iter;
 
-        explicit iterator(cds_lfht* ht_)
+        explicit hashmap_iterator(cds_lfht* ht_)
             :ht(ht_)
         {}
 
-        iterator& operator++()
+        hashmap_iterator& operator++()
         {
             cds_lfht_next(ht, &iter);
             return *this;
         }
 
-        iterator operator++(int)
+        hashmap_iterator operator++(int)
         {
-            iterator retval = *this;
+            hashmap_iterator retval = *this;
             ++(*this);
             return retval;
         }
 
-        bool operator==(iterator other) const
+        bool operator==(hashmap_iterator other) const
         {
             return cds_lfht_iter_get_node(const_cast<cds_lfht_iter*>(&iter)) ==
                 cds_lfht_iter_get_node(const_cast<cds_lfht_iter*>(&(other.iter)));
         }
 
-        bool operator!=(iterator other) const
+        bool operator!=(hashmap_iterator other) const
         {
             return !(*this == other);
         }
@@ -167,7 +166,7 @@ public:
         return 1;
     }
 
-    iterator find(const keyType& __key)
+    hashmap_iterator find(const keyType& __key)
     {
         struct cds_lfht_node* ht_node;
         struct cds_lfht_iter iter;
@@ -183,7 +182,7 @@ public:
         if (!ht_node)
             return end();
 
-        iterator itr(ht);
+        hashmap_iterator itr(ht);
         itr.iter = iter;
         return itr;
     }
@@ -201,16 +200,16 @@ public:
         rcu_read_unlock();
     }
 
-    iterator begin()
+    hashmap_iterator begin()
     {
-        iterator itr(ht);
+        hashmap_iterator itr(ht);
         cds_lfht_first(ht, &itr.iter);
         return itr;
     }
 
-    iterator end()
+    hashmap_iterator end()
     {
-        iterator itr(ht);
+        hashmap_iterator itr(ht);
         itr.iter.node = NULL;
         return itr;
     }
@@ -229,5 +228,3 @@ public:
     }
 
 };
-
-
