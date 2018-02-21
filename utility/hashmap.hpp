@@ -19,7 +19,7 @@
 
 template<typename keyType, typename valueType,
     class hashFunc = std::hash<keyType>>
-class lockfree_hashmap
+class hashmap
 {
 public:
     using nodeType = std::pair<keyType, valueType>;
@@ -50,7 +50,7 @@ private:
     }
 
 public:
-    lockfree_hashmap(unsigned long init_size = 1,
+    hashmap(unsigned long init_size = 1,
         unsigned long min_nr_alloc_buckets = 1,
         unsigned long max_nr_buckets = 0)
         :ht(cds_lfht_new(init_size,
@@ -60,7 +60,7 @@ public:
             NULL))
     {}
 
-    ~lockfree_hashmap()
+    ~hashmap()
     {
         cds_lfht_destroy(ht, NULL);
     }

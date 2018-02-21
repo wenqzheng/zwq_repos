@@ -2,6 +2,7 @@
 #include "utility/thread_pool.hpp"
 #include "utility/shared_ptr_wrapper.hpp"
 #include "utility/function_wrapper.hpp"
+#include "utility/hashmap.hpp"
 #include <type_traits>
 #include <iostream>
 #include <typeinfo>
@@ -305,9 +306,6 @@ cout << "() 4----" << endl;
 
     nullptr_t pnull = NULL;
     //flmd glmd = almd;
-    unordered_map<string, function<void()>> hmap;
-    cout << hmap.bucket_count() << endl;
-    cout << hmap.bucket_size(4) << endl;
 
     int a = 88;
     //auto inner1_a = make_shared<int>(a);
@@ -316,5 +314,9 @@ cout << "() 4----" << endl;
     auto uq_a = make_unique<int>(a);
     auto sh_b = sh_a;cout << "*sh_a: " << *sh_a << endl;
     auto uq_b = std::move(uq_a);cout << "*uq_a: " << &uq_a << endl;
+    hashmap<int,int> hmap;
+    for (auto i = 0; i < 100000; ++i)
+        hmap.insert(i, i*7);
+    cout << hmap.size() << endl;
     return 0;
 }
