@@ -2,7 +2,7 @@
 #include "utility/thread_pool.hpp"
 #include "utility/shared_ptr_wrapper.hpp"
 #include "utility/function_wrapper.hpp"
-#include "utility/hashmap.hpp"
+#include "utility/hashmap_multiple.hpp"
 #include <type_traits>
 #include <iostream>
 #include <typeinfo>

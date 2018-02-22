@@ -1,11 +1,13 @@
-// lockfree_hashmap.hpp
+// hashmap_unique.hpp
 // ----by wenqzheng
+// make use of liburcu
 //-----------------------------------------------------------------------------
 
 #pragma once
 
 #include "shared_ptr_wrapper.hpp"
 #include <cassert>
+#include <cmath>
 #include <thread>
 #include <cstddef>
 #include <iterator>
@@ -16,6 +18,17 @@
 
 #define __likely(x) __builtin_expect(!!(x),1)
 #define __unlikely(x) __builtin_expect(!!(x),0)
+
+namespace __inner_wg
+{
+    unsigned long __power2(const unsigned long& size)
+    {
+        assert(size > 0);
+        return std::pow(2, (unsigned long)(std::log2(size)) + 1);
+    }
+
+    auto __buckets_size_init = __power2(std::thread::hardware_concurrency());
+};
 
 template<typename keyType, typename valueType,
     class hashFunc = std::hash<keyType>>
@@ -50,8 +63,8 @@ private:
     }
 
 public:
-    hashmap(unsigned long init_size = 1,
-        unsigned long min_nr_alloc_buckets = 1,
+    hashmap(unsigned long init_size = __inner_wg::__buckets_size_init,
+        unsigned long min_nr_alloc_buckets = __inner_wg::__buckets_size_init,
         unsigned long max_nr_buckets = 0)
         :ht(cds_lfht_new(init_size,
             min_nr_alloc_buckets,
