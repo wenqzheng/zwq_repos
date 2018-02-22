@@ -82,9 +82,11 @@ public:
         valueType, std::ptrdiff_t, valueType*, valueType&>
     {
         cds_lfht* ht;
-
-    public:
         cds_lfht_iter iter;
+
+        friend class hashmap;
+    public:
+
 
         explicit hashmap_iterator(cds_lfht* ht_)
             :ht(ht_)

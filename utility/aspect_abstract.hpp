@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "noncopyable.hpp"
 #include <type_traits>
 #include <utility>
 
@@ -29,7 +30,7 @@ HAS_MEMBER(front);
 HAS_MEMBER(back);
 
 template<typename FuncType, typename... Args>
-class aspect
+class aspect:noncopyable
 {
     aspect(const aspect&) = delete;
     aspect(aspect&) = delete;
