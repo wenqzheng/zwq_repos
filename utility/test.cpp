@@ -66,7 +66,6 @@ int main()
 
     IoCcontainer ioc;
    
-   cout << endl; 
     invoke_aspect(AA(),BB(),CC(),DD())([](AA a,BB b, CC c, DD d){cout << "AA: " << &a << endl;cout << "BB: " << &b << endl;cout << "CC: " << &c << endl;cout << "DD: " << &d << endl;});
     //cout << *(obja.m_spw_obj) << endl;
     //cout << *(objb.m_spw_obj) << endl;
