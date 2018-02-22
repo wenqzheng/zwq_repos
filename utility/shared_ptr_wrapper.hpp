@@ -56,7 +56,7 @@ public:
     {}
 
     shared_ptr_wrapper(std::nullptr_t)
-       :m_sp_ptr(nullptr)
+        :m_sp_ptr(nullptr)
     {}
 
     shared_ptr_wrapper& operator=(std::nullptr_t)

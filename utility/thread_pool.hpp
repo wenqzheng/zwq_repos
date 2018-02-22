@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include "../queue/concurrentqueue.h"
+#include "concurrentqueue.h"
 #include "function_wrapper.hpp"
 #include <vector>
 #include <thread>

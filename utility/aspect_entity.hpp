@@ -54,8 +54,8 @@ class aspect
 
     template<typename Asp>
     struct aspectModel<Asp, std::enable_if_t<
-             has_member_front<Asp>::value && 
-             !has_member_back<Asp>::value>>:aspectConcept
+        has_member_front<Asp>::value && 
+        !has_member_back<Asp>::value>>:aspectConcept
     {
         aspectModel(const Asp& asp_)
             :asp(asp_)
@@ -70,8 +70,8 @@ class aspect
 
     template<typename Asp>
     struct aspectModel<Asp, std::enable_if_t<
-             !has_member_front<Asp>::value && 
-             has_member_back<Asp>::value>>:aspectConcept
+        !has_member_front<Asp>::value && 
+        has_member_back<Asp>::value>>:aspectConcept
     {
         aspectModel(const Asp& asp_)
             :asp(asp_)
@@ -86,8 +86,8 @@ class aspect
 
     template<typename Asp>
     struct aspectModel<Asp, std::enable_if_t<
-            has_member_front<Asp>::value && 
-            has_member_back<Asp>::value>>:aspectConcept
+        has_member_front<Asp>::value && 
+        has_member_back<Asp>::value>>:aspectConcept
     {
         aspectModel(const Asp& asp_)
             :asp(asp_)

@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include "../queue/blockingconcurrentqueue.h"
+#include "blockingconcurrentqueue.h"
 #include "function_wrapper.hpp"
 #include <vector>
 #include <thread>
