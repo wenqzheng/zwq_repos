@@ -86,8 +86,6 @@ public:
 
         friend class hashmap;
     public:
-
-
         explicit hashmap_iterator(cds_lfht* ht_)
             :ht(ht_)
         {}
