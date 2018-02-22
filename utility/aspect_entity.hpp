@@ -117,7 +117,7 @@ auto invoke_aspect(Asp&& asp)
 {
     return [&](auto&& __func) {
         aspect(asp).front();
-        __func(asp);
+        std::forward<decltype(__func)>(__func)();
         aspect(asp).back();
     };
 }
@@ -127,7 +127,7 @@ auto invoke_aspect(Head&& head, Args&&... args)
 {
     return [&](auto&& __func) {
         aspect(head).front();
-        invoke_aspect(args...)(std::bind(__func, head, args...));
+        invoke_aspect(args...)(std::forward<decltype(__func)>(__func));
         aspect(head).back();
     };
 }

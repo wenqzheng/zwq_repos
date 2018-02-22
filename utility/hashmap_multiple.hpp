@@ -14,8 +14,8 @@
 #include <urcu-bp.h>
 #include <urcu/rculfhash.h>
 
-#define likely(x) __builtin_expect(!!(x),1)
-#define unlikely(x) __builtin_expect(!!(x),0)
+#define __likely(x) __builtin_expect(!!(x),1)
+#define __unlikely(x) __builtin_expect(!!(x),0)
 
 template<typename keyType, typename valueType,
     class hashFunc = std::hash<keyType>>
@@ -152,7 +152,7 @@ public:
         if (ht_node) {
             found = true;
             ret = cds_lfht_del(ht, ht_node);
-            if (likely(!ret)) {
+            if (__likely(!ret)) {
                 mynode* del_node = caa_container_of(ht_node, mynode, node);
                 call_rcu(&del_node->rcu_head, free_node);
                 deleted = true;
