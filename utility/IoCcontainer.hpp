@@ -13,7 +13,7 @@
 #include <string>
 #include <any>
 
-class IoCcontainer:noncopyable
+class IoCcontainer
 {
     hashmap<std::string, std::any> m_regedit_map;
 

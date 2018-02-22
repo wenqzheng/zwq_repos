@@ -5,7 +5,7 @@
 #pragma once
 
 #include "shared_ptr_wrapper.hpp"
-#include "function_wrapper.hpp"
+#include <functional>
 #include <type_traits>
 #include <utility>
 
@@ -45,24 +45,17 @@ class aspect
             :asp(asp_)
         {}
         virtual ~aspectModel() {}
-        virtual void front()
-        {
-            asp.front();
-        }
-        virtual void back()
-        {
-            asp.back();
-        }
+        virtual void front() {}
+        virtual void back() {}
 
     private:
         Asp asp;
     };
 
-    template<typename Asp,
-             class enable = std::enable_if_t<
-                 has_member_front<Asp>::value && 
-                 !has_member_back<Asp>::value>
-    struct aspectModel:aspectConcept
+    template<typename Asp>
+    struct aspectModel<Asp, std::enable_if_t<
+             has_member_front<Asp>::value && 
+             !has_member_back<Asp>::value>>:aspectConcept
     {
         aspectModel(const Asp& asp_)
             :asp(asp_)
@@ -75,11 +68,10 @@ class aspect
         Asp asp;
     };
 
-    template<typename Asp,
-             class enable = std::enable_if_t<
-                 !has_member_front<Asp>::value && 
-                 has_member_back<Asp>::value>
-    struct aspectModel:aspectConcept
+    template<typename Asp>
+    struct aspectModel<Asp, std::enable_if_t<
+             !has_member_front<Asp>::value && 
+             has_member_back<Asp>::value>>:aspectConcept
     {
         aspectModel(const Asp& asp_)
             :asp(asp_)
@@ -92,18 +84,17 @@ class aspect
         Asp asp;
     };
 
-    template<typename Asp,
-             class enable = std::enable_if_t<
-                 !has_member_front<Asp>::value && 
-                 !has_member_back<Asp>::value>
-    struct aspectModel:aspectConcept
+    template<typename Asp>
+    struct aspectModel<Asp, std::enable_if_t<
+            has_member_front<Asp>::value && 
+            has_member_back<Asp>::value>>:aspectConcept
     {
         aspectModel(const Asp& asp_)
             :asp(asp_)
         {}
         virtual ~aspectModel() {}
-        virtual void front() {}
-        virtual void back() {}
+        virtual void front() {asp.front();}
+        virtual void back() {asp.back();}
 
     private:
         Asp asp;
@@ -121,11 +112,22 @@ public:
     void back() {asp->back();}
 };
 
-decltype(auto) invoke_aspect(aspect... aspList)
+template<typename Asp>
+auto invoke_aspect(Asp&& asp)
 {
-    return [=]<typename FuncType>(FuncType&& func) {
-        (aspList.front(), ...);
-        func(aspList, ...);
-        (..., aspList.back());
+    return [&](auto&& __func) {
+        aspect(asp).front();
+        __func(asp);
+        aspect(asp).back();
+    };
+}
+
+template<typename Head, typename... Args>
+auto invoke_aspect(Head&& head, Args&&... args)
+{
+    return [&](auto&& __func) {
+        aspect(head).front();
+        invoke_aspect(args...)(std::bind(__func, head, args...));
+        aspect(head).back();
     };
 }
