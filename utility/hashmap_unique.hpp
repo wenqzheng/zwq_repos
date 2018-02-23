@@ -138,6 +138,19 @@ public:
         }
     };
 
+    void insert(nodeType&& kvpair)
+    {
+        struct mynode* node = (mynode*)malloc(sizeof(*node));
+        assert(node);
+        cds_lfht_node_init(&node->node);
+        node->kvItem = kvpair;
+        unsigned long hash = hash_fn(node->kvItem.first);
+
+        rcu_read_lock();
+        cds_lfht_add_unique(ht, hash, match, &(kvpair.first), &node->node);
+        rcu_read_unlock();
+    }
+
     void insert(const nodeType& kvpair)
     {
         struct mynode* node = (mynode*)malloc(sizeof(*node));
@@ -149,13 +162,11 @@ public:
         rcu_read_lock();
         cds_lfht_add_unique(ht, hash, match, &(kvpair.first), &node->node);
         rcu_read_unlock();
-        synchronize_rcu();
     }
 
     void insert(const keyType& __key, const valueType& __val)
     {
-        nodeType tmpnode = std::make_pair(__key, __val);
-        insert(tmpnode);
+        insert(std::make_pair(__key, __val));
     }
 
     int remove(const keyType& __key)
@@ -190,7 +201,6 @@ public:
             found = false;
         }
         rcu_read_unlock();
-        synchronize_rcu();
 
         if (!found)
             return 0;
@@ -225,20 +235,6 @@ public:
         auto iter = find(__key);
         return (*iter).second;
     } 
-
-    void for_each(const std::function<void(nodeType*)>& __func)
-    {
-        struct mynode* node;
-        cds_lfht_iter iter;
-        cds_lfht_node* ht_node;
-
-        cds_lfht_for_each_entry(ht, &iter, node, node) {
-            rcu_read_lock();
-            __func(&(node->kvItem));
-            rcu_read_unlock();
-        }
-        synchronize_rcu();
-    }
 
     void for_each(const std::function<void(nodeType)>& __func)
     {

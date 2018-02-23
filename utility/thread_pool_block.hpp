@@ -13,7 +13,7 @@
 #include <atomic>
 #include <future>
 #include <type_traits>
-
+#include <iostream>
 class thread_pool
 {
     using taskType = function_wrapper<>;
@@ -61,8 +61,7 @@ public:
 
     ~thread_pool()
     {
-        __flag = true;
-	for (auto& thr:threads_group)
+        for (auto& thr:threads_group)
             if (thr.joinable())
                 thr.join();
     }

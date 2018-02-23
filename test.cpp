@@ -177,13 +177,12 @@ int main()
     thrp.submit([&,i]{
         hmap.insert(i,i*2);
         });
-    thrp.submit([&]{hmap.for_each([&](pair<int,int>* pa){pa->second *= 4;});});
     thrp.submit([&]{cout << hmap.size() << endl; cout << hmap.size() << endl;});
     thrp.submit([&]{cout << hmap.find(2)->second << endl;});
     thrp.submit([&]{cout << hmap.find(2)->second << endl;});
     thrp.submit([&]{cout << hmap.size() << endl;});
     thrp.submit([&]{cout << hmap.find(2000)->second << endl;});
-	sleep(5);
-    terminal(thrp);
+    cout << "thread id:" <<  this_thread::get_id() << endl;
+    cout << "pthread_self: " << pthread_self() << endl;
     return 0;
 }
