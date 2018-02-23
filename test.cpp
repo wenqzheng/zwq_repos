@@ -1,5 +1,5 @@
 #include "utility/aspect_abstract.hpp"
-#include "utility/thread_pool.hpp"
+#include "utility/thread_pool_block.hpp"
 #include "utility/shared_ptr_wrapper.hpp"
 #include "utility/function_wrapper.hpp"
 #include "utility/hashmap_multiple.hpp"
@@ -154,8 +154,27 @@ int main()
     //cout << typeid(decltype(lmpi)).name() << endl;
     //cout << typeid(decltype(lmp)).name() << endl;
     //thrp.submit([&]{invoke<BB,CC>(GT);});
-    sleep(2);
 
     hashmap<int,int> hmap;
+    thrp.submit([&]{
+    for(auto i = 0; i < 1000000; ++i)
+        hmap.insert(i,i*2);
+        });
+    //thread_pool thrpl;
+    thrp.submit([&]{sleep(0.5);cout << hmap.size() << endl; cout << hmap.size() << endl;});
+    thrp.submit([&]{//cout << hmap.size() << endl; sleep(1);cout << hmap.find(8000)->second << endl;});
+    for(auto i = 0; i < 1000000; ++i)
+        hmap.insert(i,i*2);
+});
+sleep(5);
+thrp.submit([&](){hmap.for_each([&](pair<int,int>* pa){pa->second *= 4;});});
+    thrp.submit([&]{cout << hmap.size() << endl; cout << hmap.size() << endl;});
+    sleep(4);
+    thrp.submit([&]{cout << hmap.find(2)->second << endl;});
+    thrp.submit([&]{cout << hmap.find(2)->second << endl;});
+    sleep(10);
+    thrp.submit([&]{cout << hmap.find(2)->second << endl;});
+
+    thrp.submit([&]{cout << hmap.find(2000)->second << endl;});
     return 0;
 }

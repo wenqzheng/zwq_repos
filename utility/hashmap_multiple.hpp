@@ -147,6 +147,7 @@ public:
         rcu_read_lock();
         cds_lfht_add(ht, hash, &node->node);
         rcu_read_unlock();
+        synchronize_rcu();
     }
 
     void insert(const keyType& __key, const valueType& __val)
@@ -187,6 +188,7 @@ public:
             found = false;
         }
         rcu_read_unlock();
+        synchronize_rcu();
 
         if (!found)
             return 0;
@@ -228,11 +230,12 @@ public:
         cds_lfht_iter iter;
         cds_lfht_node* ht_node;
 
-        rcu_read_lock();
         cds_lfht_for_each_entry(ht, &iter, node, node) {
+            rcu_read_lock();
             __func(&(node->kvItem));
+            rcu_read_unlock();
+            synchronize_rcu();
         }
-        rcu_read_unlock();
     }
 
     void for_each(const std::function<void(nodeType)>& __func)
