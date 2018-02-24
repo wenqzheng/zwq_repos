@@ -1,0 +1,28 @@
+
+struct object
+{
+    using transType = decltype([](auto& obj) {
+        return std::forward<decltype(auto)>(obj);    
+    });
+    shared_ptr_wrapper<transType> ptr_lmd;
+    std::size_t ptr_obj;
+
+    template<typename T>
+    object(T&& obj)
+        :ptr_obj(std::make_shared<transType>()),
+    {
+        using innerType = decltype((*ptr_obj)(std::forward<T>(obj)));
+        ptr_obj = shared_ptr_wrapper<innerType>(std::forward<T>(obj));
+
+    }
+
+    auto operator*() const
+    {
+        return      
+    }
+    auto operator->()(auto&& thr)
+    {
+        return (*ptr_obj)(std::forward<decltype(auto)>(thr));
+    }
+
+}

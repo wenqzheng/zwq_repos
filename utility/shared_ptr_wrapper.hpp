@@ -72,7 +72,24 @@ public:
 
     T* operator->() const
     {
-        return m_sp_ptr.get();
+        return std::move(m_sp_ptr.get());
+    }
+
+    shared_ptr_wrapper exchange(shared_ptr_wrapper sp_W)
+    {
+        return std::atomic_exchange(&m_sp_ptr, sp_W.m_sp_ptr);
+    }
+
+    bool cas_weak(shared_ptr_wrapper* expected, shared_ptr_wrapper desired)
+    {
+        return std::atomic_compare_exchange_weak(&m_sp_ptr,
+            &(expected->m_sp_ptr), desired.m_sp_ptr);
+    }
+
+    bool cas_strong(shared_ptr_wrapper* expected, shared_ptr_wrapper desired)
+    {
+        return std::atomic_compare_exchange_strong(&m_sp_ptr,
+            &(expected->m_sp_ptr), desired.m_sp_ptr);
     }
 
 };

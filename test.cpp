@@ -184,5 +184,31 @@ int main()
     thrp.submit([&]{cout << hmap.find(2000)->second << endl;});
     cout << "thread id:" <<  this_thread::get_id() << endl;
     cout << "pthread_self: " << pthread_self() << endl;
-    return 0;
+
+    cout << "sizeof size_t: " << sizeof(std::size_t) << endl;
+    union {
+        std::uint64_t val;
+        std::uint16_t tag[4];
+    } tmp;
+
+    tmp.val = 0xffeeddccbbaa9988;
+    
+    cout << hex << tmp.tag[0] << dec << endl;
+    cout << hex << tmp.tag[1] << dec << endl;
+    cout << hex << tmp.tag[2] << dec << endl;
+    cout << hex << tmp.tag[3] << dec << endl;
+    
+
+    
+sleep(5);
+
+    auto lmd = [](auto&& t) {return std::forward<decltype(t)>(t);};
+    AA aa;
+    cout << &lmd << endl;
+    cout << &aa << endl;
+    cout << sizeof(lmd) << endl;
+
+
+    function_wrapper(&CC::back)();
+return 0;
 }
