@@ -3,6 +3,7 @@
 #include "utility/shared_ptr_wrapper.hpp"
 #include "utility/function_wrapper.hpp"
 #include "utility/hashmap_multiple.hpp"
+#include <atomic>
 #include <type_traits>
 #include <iostream>
 #include <typeinfo>
@@ -74,6 +75,12 @@ template<typename T>
 class C:public A<T>
 {};
 
+template<typename T>
+class arr
+{
+    public:
+        T num[18];
+};
 
 #define REGKEY(KEY,...) \
 enum KEY                \
@@ -208,7 +215,12 @@ sleep(5);
     cout << &aa << endl;
     cout << sizeof(lmd) << endl;
 
+    std::atomic<arr<char>> bt; 
+    cout << "is lock free ? " << atomic_is_lock_free(&bt) << endl;
+   
+    __uint128_t a;
 
-    function_wrapper(&CC::back)();
-return 0;
+    //std::atomic_uint128_t a;
+    
+    return 0;
 }
