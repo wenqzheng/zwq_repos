@@ -17,7 +17,7 @@ public:
 
     tagged_ptr(tagged_ptr const & p) = default;
 
-    tagged_ptr & operator= (tagged_ptr const & p) = default;
+    tagged_ptr& operator=(const tagged_ptr& p) = default;
     
     explicit tagged_ptr(T* p, tag_t t = 0):
         ptr(p),
