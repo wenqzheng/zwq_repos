@@ -25,40 +25,48 @@ private:
     friend class std::hash;
 
 public:
-    shared_ptr_wrapper()
-        :m_sp_ptr(std::make_shared<T>())
+    shared_ptr_wrapper():
+        m_sp_ptr(std::make_shared<T>())
     {}
 
-    shared_ptr_wrapper(const shared_ptr_wrapper& sp)
-	    :m_sp_ptr(std::atomic_load(&(sp.m_sp_ptr)))
+    shared_ptr_wrapper(const shared_ptr_wrapper& sp):
+        m_sp_ptr(std::atomic_load(&(sp.m_sp_ptr)))
+    {}
+
+    shared_ptr_wrapper(shared_ptr_wrapper&& sp):
+        m_sp_ptr(std::atomic_load(&(sp.m_sp_ptr)))
     {}
 
     shared_ptr_wrapper& operator=(const shared_ptr_wrapper& sp)
     {
         std::atomic_store(&m_sp_ptr, sp.m_sp_ptr);
-	    return *this;
+        return *this;
     }
 
-    shared_ptr_wrapper(const std::shared_ptr<T>& sp)
-	    :m_sp_ptr(std::atomic_load(&sp))
+    shared_ptr_wrapper(const std::shared_ptr<T>& sp):
+        m_sp_ptr(std::atomic_load(&sp))
+    {}
+
+    shared_ptr_wrapper(std::shared_ptr<T>&& sp):
+        m_sp_ptr(std::atomic_load(&sp))
     {}
 
     shared_ptr_wrapper& operator=(const std::shared_ptr<T>& sp)
     {
         std::atomic_store(&m_sp_ptr, sp);
-	    return *this;
+        return *this;
     }
 
-    shared_ptr_wrapper(const T& t)
-        :shared_ptr_wrapper(std::make_shared<T>(t))
+    shared_ptr_wrapper(const T& t):
+        shared_ptr_wrapper(std::make_shared<T>(t))
     {}
 
-    shared_ptr_wrapper(T&& t)
-        :shared_ptr_wrapper(std::make_shared<T>(std::forward<T>(t)))
+    shared_ptr_wrapper(T&& t):
+        shared_ptr_wrapper(std::make_shared<T>(std::forward<T>(t)))
     {}
 
-    shared_ptr_wrapper(std::nullptr_t)
-        :m_sp_ptr(nullptr)
+    shared_ptr_wrapper(std::nullptr_t):
+        m_sp_ptr(nullptr)
     {}
 
     shared_ptr_wrapper& operator=(std::nullptr_t)
@@ -100,17 +108,19 @@ public:
     }
 
     bool cas_weak(shared_ptr_wrapper* expected, shared_ptr_wrapper desired,
-        std::memory_order order = std::memory_order_seq_cst)
+        std::memory_order success = std::memory_order_seq_cst,
+        std::memory_order failure = std::memory_order_seq_cst)
     {
-        return std::atomic_compare_exchange_weak(&m_sp_ptr,
-            &(expected->m_sp_ptr), desired.m_sp_ptr, order);
+        return std::atomic_compare_exchange_weak_explicit(&m_sp_ptr,
+            &(expected->m_sp_ptr), desired.m_sp_ptr, success, failure);
     }
 
     bool cas_strong(shared_ptr_wrapper* expected, shared_ptr_wrapper desired,
-        std::memory_order order = std::memory_order_seq_cst)
+        std::memory_order success = std::memory_order_seq_cst,
+        std::memory_order failure = std::memory_order_seq_cst)
     {
-        return std::atomic_compare_exchange_strong(&m_sp_ptr,
-            &(expected->m_sp_ptr), desired.m_sp_ptr), order;
+        return std::atomic_compare_exchange_strong_explicit(&m_sp_ptr,
+            &(expected->m_sp_ptr), desired.m_sp_ptr, success, failure);
     }
 };
 
@@ -129,43 +139,62 @@ private:
     friend class std::hash;
 
 public:
-    shared_ptr_wrapper()
-        :m_sp_ptr(std::shared_ptr<void>())
+    shared_ptr_wrapper():
+        m_sp_ptr(std::shared_ptr<void>())
     {}
 
-    shared_ptr_wrapper(const shared_ptr_wrapper& sp)
-	    :m_sp_ptr(std::atomic_load(&(sp.m_sp_ptr)))
+    shared_ptr_wrapper(const shared_ptr_wrapper& sp):
+        m_sp_ptr(std::atomic_load(&(sp.m_sp_ptr)))
+    {}
+
+    shared_ptr_wrapper(shared_ptr_wrapper&& sp):
+        m_sp_ptr(std::atomic_load(&(sp.m_sp_ptr)))
     {}
 
     shared_ptr_wrapper& operator=(const shared_ptr_wrapper& sp)
     {
         std::atomic_store(&m_sp_ptr, sp.m_sp_ptr);
-	    return *this;
+        return *this;
     }
 
     template<typename U>
-    shared_ptr_wrapper(const std::shared_ptr<U>& sp)
-    {
-        std::atomic_store(reinterpret_cast<std::shared_ptr<U>*>(&m_sp_ptr), sp);
-    }
+    shared_ptr_wrapper(const std::shared_ptr<U>& sp):
+        m_sp_ptr(std::atomic_load(
+            reinterpret_cast<const std::shared_ptr<void>*>(&sp)))
+    {}
+
+    template<typename U>
+    shared_ptr_wrapper(std::shared_ptr<U>&& sp):
+        m_sp_ptr(std::atomic_load(
+            reinterpret_cast<std::shared_ptr<void>*>(&sp)))
+    {}
 
     template<typename U>
     shared_ptr_wrapper& operator=(const std::shared_ptr<U>& sp)
     {
         std::atomic_store(&m_sp_ptr,
             *reinterpret_cast<std::shared_ptr<void>*>(&sp));
-	    return *this;
+        return *this;
     }
 
     template<typename U>
-    shared_ptr_wrapper(const U& u)
+    shared_ptr_wrapper(const U& u):
+        shared_ptr_wrapper(std::make_shared<U>(u))
+    {}
+
+    template<typename U>
+    shared_ptr_wrapper(U&& u):
+        shared_ptr_wrapper(std::make_shared<U>(u))
+    {}
+
+    template<typename U>
+    shared_ptr_wrapper& operator=(const U& u)
     {
-        std::shared_ptr<U> __tmp = std::make_shared<U>(u);
-        m_sp_ptr = std::atomic_load(reinterpret_cast<std::shared_ptr<void>*>(&__tmp));
+        return shared_ptr_wrapper(std::make_shared<U>(u));
     }
 
-    shared_ptr_wrapper(std::nullptr_t)
-        :m_sp_ptr(nullptr)
+    shared_ptr_wrapper(std::nullptr_t):
+        m_sp_ptr(nullptr)
     {}
 
     shared_ptr_wrapper& operator=(std::nullptr_t)
