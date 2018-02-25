@@ -30,12 +30,12 @@ public:
         tag = t;
     }
     
-    bool operator== (volatile const tagged_ptr& p) const
+    bool operator==(volatile const tagged_ptr& p) const
     {
         return (ptr == p.ptr) && (tag == p.tag);
     }
 
-    bool operator!= (volatile const tagged_ptr& p) const
+    bool operator!=(volatile const tagged_ptr& p) const
     {
         return !operator==(p);
     }
