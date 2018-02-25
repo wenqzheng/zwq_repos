@@ -252,6 +252,14 @@ cout << "ent4.get: " << ent4 << endl;
 cout << "*ent4: " << *ent4 << endl;
 
 cout << endl << "test.get: " << ttest(5).get() << endl << endl;
+shared_ptr_wrapper<int> sp;
+shared_ptr_wrapper<void> sp_a(sp);
+shared_ptr_wrapper<void> sp_b(sp);
+sp_a.cas_strong(sp_b,shared_ptr_wrapper<int>(88));
+cout << *(sp_a.convert<int>()) << endl;
+shared_ptr_wrapper<int> sp_c;
+sp_c.store(sp_a);
+cout << *sp_c << endl;
 /*
 typename allocator_traits<decltype(__alloc)>::rebind_alloc<int> _alloc;
 auto tmp1 = std::allocate_shared<int>(_alloc,8);
