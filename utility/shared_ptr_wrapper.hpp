@@ -33,10 +33,6 @@ public:
         m_sp_ptr(std::atomic_load(&(sp.m_sp_ptr)))
     {}
 
-    shared_ptr_wrapper(shared_ptr_wrapper&& sp):
-        m_sp_ptr(std::atomic_load(&(sp.m_sp_ptr)))
-    {}
-
     shared_ptr_wrapper& operator=(const shared_ptr_wrapper& sp)
     {
         std::atomic_store(&m_sp_ptr, sp.m_sp_ptr);
@@ -44,10 +40,6 @@ public:
     }
 
     shared_ptr_wrapper(const std::shared_ptr<T>& sp):
-        m_sp_ptr(std::atomic_load(&sp))
-    {}
-
-    shared_ptr_wrapper(std::shared_ptr<T>&& sp):
         m_sp_ptr(std::atomic_load(&sp))
     {}
 
@@ -59,10 +51,6 @@ public:
 
     shared_ptr_wrapper(const T& t):
         shared_ptr_wrapper(std::make_shared<T>(t))
-    {}
-
-    shared_ptr_wrapper(T&& t):
-        shared_ptr_wrapper(std::make_shared<T>(std::forward<T>(t)))
     {}
 
     shared_ptr_wrapper(std::nullptr_t):
@@ -147,10 +135,6 @@ public:
         m_sp_ptr(std::atomic_load(&(sp.m_sp_ptr)))
     {}
 
-    shared_ptr_wrapper(shared_ptr_wrapper&& sp):
-        m_sp_ptr(std::atomic_load(&(sp.m_sp_ptr)))
-    {}
-
     shared_ptr_wrapper& operator=(const shared_ptr_wrapper& sp)
     {
         std::atomic_store(&m_sp_ptr, sp.m_sp_ptr);
@@ -161,12 +145,6 @@ public:
     shared_ptr_wrapper(const std::shared_ptr<U>& sp):
         m_sp_ptr(std::atomic_load(
             reinterpret_cast<const std::shared_ptr<void>*>(&sp)))
-    {}
-
-    template<typename U>
-    shared_ptr_wrapper(std::shared_ptr<U>&& sp):
-        m_sp_ptr(std::atomic_load(
-            reinterpret_cast<std::shared_ptr<void>*>(&sp)))
     {}
 
     template<typename U>
@@ -181,17 +159,6 @@ public:
     shared_ptr_wrapper(const U& u):
         shared_ptr_wrapper(std::make_shared<U>(u))
     {}
-
-    template<typename U>
-    shared_ptr_wrapper(U&& u):
-        shared_ptr_wrapper(std::make_shared<U>(u))
-    {}
-
-    template<typename U>
-    shared_ptr_wrapper& operator=(const U& u)
-    {
-        return shared_ptr_wrapper(std::make_shared<U>(u));
-    }
 
     shared_ptr_wrapper(std::nullptr_t):
         m_sp_ptr(nullptr)
