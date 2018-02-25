@@ -10,12 +10,15 @@
 #include <cstdint>
 
 template <class T>
-class tagged_ptr
+class alignas(sizeof(void*)) tagged_ptr
 {
     typedef std::uint64_t compressed_ptr_t;
 
 public:
     typedef std::uint16_t tag_t;
+
+protected:
+    compressed_ptr_t ptr;
 
 private:
     union cast_unit
@@ -25,21 +28,21 @@ private:
     };
 
     static const int tag_index = 3;
-    static const compressed_ptr_t ptr_mask = 0xffffffffffffUL; //(1L<<48L)-1;
+    static const compressed_ptr_t ptr_mask = 0xffffffffffffUL;
 
-    static T* extract_ptr(volatile compressed_ptr_t const & i)
+    static T* extract_ptr(volatile const compressed_ptr_t& i)
     {
         return (T*)(i & ptr_mask);
     }
 
-    static tag_t extract_tag(volatile compressed_ptr_t const & i)
+    static tag_t extract_tag(volatile const compressed_ptr_t& i)
     {
         cast_unit cu;
         cu.value = i;
         return cu.tag[tag_index];
     }
 
-    static compressed_ptr_t pack_ptr(T * ptr, tag_t tag)
+    static compressed_ptr_t pack_ptr(T* ptr, tag_t tag)
     {
         cast_unit ret;
         ret.value = compressed_ptr_t(ptr);
@@ -48,55 +51,42 @@ private:
     }
 
 public:
-    /** uninitialized constructor */
-    tagged_ptr() noexcept = default; //: ptr(0), tag(0)
+    tagged_ptr() noexcept = default;
 
-    /** copy constructor */
-    tagged_ptr(tagged_ptr const & p) = default;
+    tagged_ptr(const tagged_ptr& p) = default;
 
-    explicit tagged_ptr(T * p, tag_t t = 0):
+    explicit tagged_ptr(T* p, tag_t t = 0):
         ptr(pack_ptr(p, t))
     {}
 
-    /** unsafe set operation */
-    /* @{ */
-    tagged_ptr & operator= (tagged_ptr const & p) = default;
+    tagged_ptr& operator=(const tagged_ptr&) = default;
 
-    void set(T * p, tag_t t)
+    void set(T* p, tag_t t)
     {
         ptr = pack_ptr(p, t);
     }
-    /* @} */
-
-    /** comparing semantics */
-    /* @{ */
-    bool operator== (volatile tagged_ptr const & p) const
+    
+    bool operator==(volatile const tagged_ptr& p) const
     {
         return (ptr == p.ptr);
     }
 
-    bool operator!= (volatile tagged_ptr const & p) const
+    bool operator!= (volatile const tagged_ptr& p) const
     {
         return !operator==(p);
     }
-    /* @} */
-
-    /** pointer access */
-    /* @{ */
-    T * get_ptr() const
+    
+    T* get_ptr() const
     {
         return extract_ptr(ptr);
     }
 
-    void set_ptr(T * p)
+    void set_ptr(T* p)
     {
         tag_t tag = get_tag();
         ptr = pack_ptr(p, tag);
     }
-    /* @} */
-
-    /** tag access */
-    /* @{ */
+    
     tag_t get_tag() const
     {
         return extract_tag(ptr);
@@ -110,29 +100,22 @@ public:
 
     void set_tag(tag_t t)
     {
-        T * p = get_ptr();
+        T* p = get_ptr();
         ptr = pack_ptr(p, t);
     }
-    /* @} */
-
-    /** smart pointer support  */
-    /* @{ */
-    T & operator*() const
+    
+    T& operator*() const
     {
         return *get_ptr();
     }
 
-    T * operator->() const
+    T* operator->() const
     {
         return get_ptr();
     }
 
-    operator bool(void) const
+    operator bool() const
     {
         return get_ptr() != 0;
     }
-    /* @} */
-
-protected:
-    compressed_ptr_t ptr;
 };
