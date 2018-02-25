@@ -142,6 +142,18 @@ public:
     }
 
     template<typename U>
+    shared_ptr_wrapper(const shared_ptr_wrapper<U>& sp):
+        m_sp_ptr(std::atomic_load(reinterpret_cast<const std::shared_ptr<void>*>(&sp)))
+    {}
+
+    template<typename U>
+    shared_ptr_wrapper& operator=(const shared_ptr_wrapper<U>& sp)
+    {
+        std::atomic_store(&m_sp_ptr, *reinterpret_cast<std::shared_ptr<void>*>(sp));
+        return *this;
+    }
+
+    template<typename U>
     shared_ptr_wrapper(const std::shared_ptr<U>& sp):
         m_sp_ptr(std::atomic_load(
             reinterpret_cast<const std::shared_ptr<void>*>(&sp)))
@@ -169,7 +181,7 @@ public:
         m_sp_ptr = nullptr;
         return *this;
     }
-   
+
     void* operator->() const
     {
         return reinterpret_cast<void*>(std::move(m_sp_ptr.get()));
