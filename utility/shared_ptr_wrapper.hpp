@@ -149,7 +149,7 @@ public:
     template<typename U>
     shared_ptr_wrapper& operator=(const shared_ptr_wrapper<U>& sp)
     {
-        std::atomic_store(&m_sp_ptr, *reinterpret_cast<std::shared_ptr<void>*>(sp));
+        std::atomic_store(&m_sp_ptr, *reinterpret_cast<const std::shared_ptr<void>*>(sp));
         return *this;
     }
 
@@ -163,7 +163,7 @@ public:
     shared_ptr_wrapper& operator=(const std::shared_ptr<U>& sp)
     {
         std::atomic_store(&m_sp_ptr,
-            *reinterpret_cast<std::shared_ptr<void>*>(&sp));
+            *reinterpret_cast<const std::shared_ptr<void>*>(&sp));
         return *this;
     }
 
@@ -235,6 +235,12 @@ public:
             success, failure);
     }
 };
+
+template<typename U>
+shared_ptr_wrapper<U> convert(const shared_ptr_wrapper<void>& sp_V)
+{
+    return std::atomic_load(reinterpret_cast<const std::shared_ptr<U>*>(&sp_V));
+}
 
 template<typename U>
 class std::hash<shared_ptr_wrapper<U>>

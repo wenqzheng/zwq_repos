@@ -35,8 +35,8 @@ public:
 private:
     void deallocate_impl(index_t n)
     {
-        void* node = reinterpret_cast<void*>(n);
-        tagged_node_ptr old_pool = cache_pool.load(std::memory_order_consume);
+        auto node = shared_ptr_wrapper<void>(n);
+        auto old_pool = cache_pool.load(std::memory_order_consume);
         freelist_node* new_pool_ptr = reinterpret_cast<freelist_node*>(node);
 
         for (;;) {

@@ -13,7 +13,7 @@
 #include <optional>
 #include <functional>
 #include <array>
-#include <vector>
+#include <deque>
 #include <unordered_map>
 
 using namespace std;
@@ -209,29 +209,17 @@ int main()
 
     
 sleep(5);
+shared_ptr_wrapper<void> ta;
+{
+auto tb = std::make_shared<int>(11);
+cout << "tb.get(): " << tb.get() << endl;
+ta = tb;
+}
+cout << "ta.get(): " << ta.get() << endl;
+auto tc = convert<int>(ta);
+//auto tc = shared_ptr_wrapper<int>(ta);
+cout << "tc.get(): " << tc.get() << endl;
+cout << "*tc: " << *tc << endl;
 
-    auto lmd = [](auto&& t) {return std::forward<decltype(t)>(t);};
-    AA aa;
-    cout << &lmd << endl;
-    cout << &aa << endl;
-    cout << sizeof(lmd) << endl;
-
-    std::atomic<arr<char>> bt; 
-    cout << "is lock free ? " << atomic_is_lock_free(&bt) << endl;
-   
-
-    std::allocator<int> alloc;
-    //shared_ptr_wrapper<void> foo ;//= std::allocate_shared<int>(alloc);
-    shared_ptr_wrapper<string>  foo(string("zwq"));
-    auto foovoid = shared_ptr_wrapper<void>(foo);
-
-    cout << typeid(decltype(foovoid)).name() << endl;
-    cout << foovoid.get() << endl;
-    cout << foo.get() << endl;
-    //cout << far.get() << endl;
-    //auto bar = shared_ptr<int>(foo);
-//    cout << typeid(decltype(bfa)).name() << endl;
-//    cout << sizeof(shared_ptr_wrapper<int>) << endl;
-    cout << sizeof(shared_ptr<int>) << endl;
-    return 0;
+return 0;
 }
