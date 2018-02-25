@@ -36,14 +36,14 @@ private:
     void deallocate_impl(index_t n)
     {
         auto node = shared_ptr_wrapper<void>(n);
-	sp_node_ptr new_pool_ptr = convert<freelist_node>(node);
-	sp_node_ptr old_pool;
+        sp_node_ptr new_pool_ptr = convert<freelist_node>(node);
+        sp_node_ptr old_pool = cache_pool.load(memory_order_consume);
         sp_node_ptr new_pool;
-	do {
-            old_pool = cache_pool.load(std::memory_order_consume);
+        
+        do {
             new_pool = new_pool_ptr;
             new_pool->next = old_pool;
-	} while (!cache_pool.cas_weak(&old_pool, new_pool));
+        } while (!cache_pool.cas_weak(&old_pool, new_pool));
     }
 
     void deallocate_impl_unsafe(index_t n)
@@ -65,18 +65,18 @@ private:
         sp_node_ptr new_pool;
 
         do {
-            if (!old_pool) {
+            if (!old_pool.get()) {
                 if (!__bounded)
-                    return std::allocate_shared<T>(__alloc());
+                    return std::make_shared<T>();
                 else
                     return 0;
             }
 
             sp_node_ptr new_pool_ptr = old_pool->next;
             new_pool = new_pool_ptr;
-	} while (!cache_pool.cas_weak(&old_pool, new_pool));
+        } while (!cache_pool.cas_weak(&old_pool, new_pool));
 	
-	auto __tmp_ptr = old_pool;
+        auto __tmp_ptr = old_pool;
         return convert<T>(__tmp_ptr);
     }
 

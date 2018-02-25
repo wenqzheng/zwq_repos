@@ -6,7 +6,6 @@
 
 #include "accelerator.hpp"
 #include "tagged_ptr.hpp"
-#include "../utility/noncopyable.hpp"
 #include <limits>
 #include <memory>
 #include <array>
@@ -17,7 +16,7 @@
 #include <atomic>
 
 template <typename T, typename Alloc = std::allocator<T>>
-class cache_freelist:Alloc, noncopyable
+class cache_freelist:Alloc
 {
     struct freelist_node
     {
@@ -126,7 +125,7 @@ public:
     cache_freelist(const cache_freelist&) = default;
 
     template <typename Allocator>
-    cache_freelist(const Allocator& alloc, std::size_t n = 1):
+    cache_freelist(const Allocator& alloc, std::size_t n = 0):
         Alloc(alloc),
         cache_pool(tagged_node_ptr(NULL))
     {
@@ -139,37 +138,18 @@ public:
     template <bool __threadsafe>
     void reserve(std::size_t count)
     {
-        for (std::size_t i = 0; i != count; ++i) {
+        for (std::size_t i = 0; i < count; ++i) {
             T * node = Alloc::allocate(1);
             deallocate<__threadsafe>(node);
         }
     }
 
-    template <bool __threadsafe, bool __bounded>
-    T * construct()
+    template <bool __threadsafe, bool __bounded, typename... Args>
+    T * construct(Args&&... args)
     {
         T * node = allocate<__threadsafe, __bounded>();
         if (node)
-            new(node) T();
-        return node;
-    }
-
-    template <bool __threadsafe, bool __bounded, typename ArgumentType>
-    T * construct(const ArgumentType& arg)
-    {
-        T * node = allocate<__threadsafe, __bounded>();
-        if (node)
-            new(node) T(arg);
-        return node;
-    }
-
-    template <bool __threadsafe, bool __bounded,
-	    typename ArgumentType1, typename ArgumentType2>
-    T * construct(const ArgumentType1& arg1, const ArgumentType2& arg2)
-    {
-        T * node = allocate<__threadsafe, __bounded>();
-        if (node)
-            new(node) T(arg1, arg2);
+            new(node) T(std::forward<Args>(args)...);
         return node;
     }
 
@@ -177,13 +157,6 @@ public:
     void destruct(tagged_node_handle tagged_ptr_f)
     {
         index_t n = tagged_ptr_f.get_ptr();
-        n->~T();
-        deallocate<__threadsafe>(n);
-    }
-
-    template <bool __threadsafe>
-    void destruct(index_t n)
-    {
         n->~T();
         deallocate<__threadsafe>(n);
     }
