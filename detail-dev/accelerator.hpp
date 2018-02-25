@@ -10,9 +10,6 @@
 #    define CACHE_LINE_SIZE 64
 #endif
 
-#include <boost/align/aligned_allocator.hpp>
-using aligned_allocator_adaptor = boost::alignment::aligned_allocator_adaptor;
-
 inline bool likely(bool expr)
 {
 #ifdef __GNUC__

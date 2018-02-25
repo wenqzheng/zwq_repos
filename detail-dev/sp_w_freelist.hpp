@@ -5,7 +5,7 @@
 #pragma once
 
 #include "accelerator.hpp"
-#include "tagged_ptr.hpp"
+#include "../utility/shared_ptr_wrapper.hpp"
 #include "../utility/noncopyable.hpp"
 #include <limits>
 #include <memory>
@@ -16,21 +16,21 @@
 #include <cstdlib>
 #include <atomic>
 
-template <typename T, typename Alloc = std::allocator<T>>
-class cache_freelist:Alloc, noncopyable
+template <typename T, typename __alloc = std::allocator<T>>
+class cache_freelist:__alloc, noncopyable
 {
     struct freelist_node
     {
-        tagged_ptr<freelist_node> next;
+        shared_ptr_wrapper<freelist_node> next;
     };
 
-    using tagged_node_ptr = tagged_ptr<freelist_node>;
+    using sp_node_ptr = shared_ptr_wrapper<freelist_node>;
     
-    std::atomic<tagged_node_ptr> cache_pool;
+    sp_node_ptr cache_pool;
 
 public:
-    using index_t = T*;
-    using tagged_node_handle = tagged_ptr<T>;
+    using index_t = shared_ptr_wrapper<T>;
+    using sp_node_handle = shared_ptr_wrapper<T>;
 
 private:
     void deallocate_impl(index_t n)

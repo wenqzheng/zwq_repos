@@ -219,9 +219,26 @@ sleep(5);
     std::atomic<arr<char>> bt; 
     cout << "is lock free ? " << atomic_is_lock_free(&bt) << endl;
    
-    __uint128_t a;
 
-    //std::atomic_uint128_t a;
+    std::allocator<int> alloc;
+    //shared_ptr_wrapper<void> foo ;//= std::allocate_shared<int>(alloc);
+    shared_ptr<void> foo;// = make_shared<void>();
+    auto bar = make_shared<int>(8);
     
+    std::atomic_store(reinterpret_cast<shared_ptr<int>*>(&foo), bar);
+    shared_ptr_wrapper<void> far = bar;
+
+    shared_ptr_wrapper<void> another(bar);
+    //far = std::atomic_load(reinterpret_cast<shared_ptr<AA>*>(&foo));
+
+//    auto bfa = *reinterpret_cast<shared_ptr<int>*>(&far);
+    cout << *((int*)(another.get())) << endl;
+    //cout << far.get() << endl;
+    cout << bar.get() << endl;
+    //auto bar = shared_ptr<int>(foo);
+    cout << foo.get() << endl;
+//    cout << typeid(decltype(bfa)).name() << endl;
+//    cout << sizeof(shared_ptr_wrapper<int>) << endl;
+    cout << sizeof(shared_ptr<int>) << endl;
     return 0;
 }
