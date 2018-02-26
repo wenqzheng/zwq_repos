@@ -259,9 +259,19 @@ auto lmd = [](auto&& obj) {
     return std::forward<decltype(obj)>(obj);
 };
 
-shared_ptr<int> sp = make_shared<int>(8);
-weak_ptr<int> wp = reinterpret_cast<weak_ptr<int>*>(&sp);
-cout << *sp << endl << *(wp.lock()) << endl << endl;
+shared_ptr_wrapper<int> tmp11 = make_shared<int>(88);
+shared_ptr_wrapper<int> tmp12 = make_shared<int>(44);
+shared_ptr_wrapper<int> tmp(tmp11);
+weak_ptr_wrapper<int> newwp(tmp11);
+cout << "use count: " << newwp.use_count() << endl;
+tmp = tmp12;
+cout << "use count: " << newwp.use_count() << endl;
+newwp.reset();
+cout << "use count: " << newwp.use_count() << endl;
+auto aut = newwp.lock();
+cout << "type aut: " << typeid(decltype(aut)).name() << endl;
+cout << "aut.get: " << aut.get() << endl;
+cout << "use count: " << newwp.use_count() << endl;
 /*
 typename allocator_traits<decltype(__alloc)>::rebind_alloc<int> _alloc;
 auto tmp1 = std::allocate_shared<int>(_alloc,8);
