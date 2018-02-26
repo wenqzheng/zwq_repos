@@ -262,16 +262,21 @@ auto lmd = [](auto&& obj) {
 shared_ptr_wrapper<int> tmp11 = make_shared<int>(88);
 shared_ptr_wrapper<int> tmp12 = make_shared<int>(44);
 shared_ptr_wrapper<int> tmp(tmp11);
-weak_ptr_wrapper<int> newwp(tmp11);
+weak_ptr_wrapper<void> newwp(tmp11);
+if (newwp) cout << "go 1" << endl;else cout << "go 0" << endl;
 cout << "use count: " << newwp.use_count() << endl;
 tmp = tmp12;
 cout << "use count: " << newwp.use_count() << endl;
+if (newwp) cout << "go 1" << endl;else cout << "go 0" << endl;
 newwp.reset();
+if (newwp) cout << "go 1" << endl;else cout << "go 0" << endl;
 cout << "use count: " << newwp.use_count() << endl;
-auto aut = newwp.lock();
-cout << "type aut: " << typeid(decltype(aut)).name() << endl;
-cout << "aut.get: " << aut.get() << endl;
+tmp12 = newwp.lock();
+cout << "type aut: " << typeid(decltype(tmp12)).name() << endl;
+if (newwp) cout << "go 1" << endl;else cout << "go 0" << endl;
+cout << "aut.get: " << tmp12.get() << endl;
 cout << "use count: " << newwp.use_count() << endl;
+if (newwp) cout << "go 1" << endl;else cout << "go 0" << endl;
 /*
 typename allocator_traits<decltype(__alloc)>::rebind_alloc<int> _alloc;
 auto tmp1 = std::allocate_shared<int>(_alloc,8);
