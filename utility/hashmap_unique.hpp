@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include "shared_ptr_wrapper.hpp"
+#include "smart_ptr_wrapper.hpp"
 #include <cstdint>
 #include <cassert>
 #include <thread>

@@ -1,6 +1,6 @@
 #include "utility/aspect_abstract.hpp"
 #include "utility/thread_pool_block.hpp"
-#include "utility/shared_ptr_wrapper.hpp"
+#include "utility/smart_ptr_wrapper.hpp"
 #include "utility/function_wrapper.hpp"
 #include "utility/hashmap_multiple.hpp"
 #include <atomic>

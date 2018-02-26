@@ -5,8 +5,7 @@
 #pragma once
 
 #include "accelerator.hpp"
-#include "../utility/shared_ptr_wrapper.hpp"
-#include "../utility/noncopyable.hpp"
+#include "../utility/smart_ptr_wrapper.hpp"
 #include <limits>
 #include <memory>
 #include <array>
