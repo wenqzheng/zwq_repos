@@ -258,7 +258,10 @@ shared_ptr_wrapper<string> objs = std::make_shared<string>("zwq");
 auto lmd = [](auto&& obj) {
     return std::forward<decltype(obj)>(obj);
 };
-std::atomic<decltype(lmd)> b;
+
+shared_ptr<int> sp = make_shared<int>(8);
+weak_ptr<int> wp = reinterpret_cast<weak_ptr<int>*>(&sp);
+cout << *sp << endl << *(wp.lock()) << endl << endl;
 /*
 typename allocator_traits<decltype(__alloc)>::rebind_alloc<int> _alloc;
 auto tmp1 = std::allocate_shared<int>(_alloc,8);
