@@ -15,29 +15,80 @@
 template<typename>
 class shared_ptr_wrapper;
 
+template<typename>
+class weak_ptr_wrapper;
+
 template<typename U>
-class std::hash<shared_ptr_wrapper<U>>
+struct std::hash<shared_ptr_wrapper<U>>
 {
-public:
     auto operator()(const shared_ptr_wrapper<U>& sp_U)
     {
-        return sp_U.__sp_wrapper_hash();
+        return std::hash<std::shared_ptr<U>>()(sp_U.m_sp_ptr);
     }
 };
+
+template<typename U>
+struct std::less<shared_ptr_wrapper<U>>
+{
+    auto operator()(const shared_ptr_wrapper<U>& sp_U1,
+        const shared_ptr_wrapper<U>& sp_U2)
+    {
+        return std::less<std::shared_ptr<U>>()(
+            sp_U1.m_sp_ptr, sp_U2.m_sp_ptr);
+    }
+};
+
+template<typename U>
+struct std::less_equal<shared_ptr_wrapper<U>>
+{
+    auto operator()(const shared_ptr_wrapper<U>& sp_U1,
+        const shared_ptr_wrapper<U>& sp_U2)
+    {
+        return std::less_equal<std::shared_ptr<U>>()(
+            sp_U1.m_sp_ptr, sp_U2.m_sp_ptr);
+    }
+};
+
+template<typename U>
+struct std::greater<shared_ptr_wrapper<U>>
+{
+    auto operator()(const shared_ptr_wrapper<U>& sp_U1,
+        const shared_ptr_wrapper<U>& sp_U2)
+    {
+        return std::greater<std::shared_ptr<U>>()(
+            sp_U1.m_sp_ptr, sp_U2.m_sp_ptr);
+    }
+};
+
+template<typename U>
+struct std::greater_equal<shared_ptr_wrapper<U>>
+{
+    auto operator()(const shared_ptr_wrapper<U>& sp_U1,
+        const shared_ptr_wrapper<U>& sp_U2)
+    {
+        return std::greater_equal<std::shared_ptr<U>>()(
+            sp_U1.m_sp_ptr, sp_U2.m_sp_ptr);
+    }
+};
+
 
 template<typename T>
 class alignas(sizeof(std::shared_ptr<void>)) shared_ptr_wrapper
 {
 private:
     std::shared_ptr<T> m_sp_ptr;
-
-    std::size_t __sp_wrapper_hash() const
-    {
-        return std::hash<std::shared_ptr<T>>()(m_sp_ptr);
-    }
-
+    
     template<typename>
     friend class std::hash;
+
+    template<typename>
+    friend class std::less;
+    template<typename>
+    friend class std::less_equal;
+    template<typename>
+    friend class std::greater;
+    template<typename>
+    friend class std::greater_equal;
 
     template<typename>
     friend class weak_ptr_wrapper;
@@ -232,19 +283,24 @@ public:
     }
 };
 
+
 template<>
 class alignas(sizeof(std::shared_ptr<void>)) shared_ptr_wrapper<void>
 {
 private:
     std::shared_ptr<void> m_sp_ptr;
 
-    std::size_t __sp_wrapper_hash() const
-    {
-        return std::hash<std::shared_ptr<void>>()(m_sp_ptr);
-    }
-
     template<typename>
     friend class std::hash;
+
+    template<typename>
+    friend class std::less;
+    template<typename>
+    friend class std::less_equal;
+    template<typename>
+    friend class std::greater;
+    template<typename>
+    friend class std::greater_equal;
 
     template<typename>
     friend class weak_ptr_wrapper;
@@ -425,11 +481,66 @@ public:
 };
 
 
+
+template<typename U>
+struct std::less<weak_ptr_wrapper<U>>
+{
+    auto operator()(const weak_ptr_wrapper<U>& wp_U1,
+        const weak_ptr_wrapper<U>& wp_U2)
+    {
+        return std::less<std::weak_ptr<U>>()(
+            wp_U1.m_wp_ptr, wp_U2.m_wp_ptr);
+    }
+};
+
+template<typename U>
+struct std::less_equal<weak_ptr_wrapper<U>>
+{
+    auto operator()(const weak_ptr_wrapper<U>& wp_U1,
+        const weak_ptr_wrapper<U>& wp_U2)
+    {
+        return std::less_equal<std::weak_ptr<U>>()(
+            wp_U1.m_wp_ptr, wp_U2.m_wp_ptr);
+    }
+};
+
+template<typename U>
+struct std::greater<weak_ptr_wrapper<U>>
+{
+    auto operator()(const weak_ptr_wrapper<U>& wp_U1,
+        const weak_ptr_wrapper<U>& wp_U2)
+    {
+        return std::greater<std::weak_ptr<U>>()(
+            wp_U1.m_wp_ptr, sp_U2.m_wp_ptr);
+    }
+};
+
+template<typename U>
+struct std::greater_equal<weak_ptr_wrapper<U>>
+{
+    auto operator()(const weak_ptr_wrapper<U>& wp_U1,
+        const weak_ptr_wrapper<U>& wp_U2)
+    {
+        return std::greater_equal<std::weak_ptr<U>>()(
+            wp_U1.m_wp_ptr, wp_U2.m_wp_ptr);
+    }
+};
+
+
 template<typename T>
 class alignas(sizeof(std::weak_ptr<void>)) weak_ptr_wrapper
 {
 private:
     std::weak_ptr<T> m_wp_ptr;
+
+    template<typename>
+    friend class std::less;
+    template<typename>
+    friend class std::less_equal;
+    template<typename>
+    friend class std::greater;
+    template<typename>
+    friend class std::greater_equal;
 
 public:
     constexpr weak_ptr_wrapper():

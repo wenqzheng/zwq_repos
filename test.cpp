@@ -279,9 +279,23 @@ if (newwp) cout << "go 1" << endl;else cout << "go 0" << endl;
 cout << "aut.get: " << tmp12.get() << endl;
 cout << "use count: " << newwp.use_count() << endl;
 if (newwp) cout << "go 1" << endl;else cout << "go 0" << endl;
-shared_ptr_wrapper<int> zwq1;
-weak_ptr_wrapper<string> zwq2(zwq1);
-cout << typeid(decltype(zwq2.lock())).name() << endl;
+shared_ptr_wrapper<void> zwq1;
+shared_ptr_wrapper<nullptr_t> zwq2;
+if (zwq1) cout << "zwq1 == nullptr" << endl;else cout << "zwq1 not nullptr" << endl;
+if (zwq1) cout << "zwq1 == void" << endl;else cout << "zwq1 not void" << endl;
+if (zwq2) cout << "zwq2 == nullptr" << endl;else cout << "zwq2 not nullptr" << endl;
+if (zwq2) cout << "zwq2 == void" << endl;else cout << "zwq2 not void" << endl;
+std::less<int> lessint;
+std::less<shared_ptr<string>> sp_lessint;
+std::less<weak_ptr<int>> lessweakint;
+if (sp_lessint(make_shared<string>(string("zwq")),make_shared<string>(string("OK"))))
+    cout << "larger" << endl;
+else
+    cout << "less" << endl;
+std::hash<shared_ptr_wrapper<int>> hashint;
+cout << hashint(shared_ptr_wrapper<int>(make_shared<int>(88))) << endl;
+std::hash<shared_ptr<int>> hashweakint;
+//cout << "less" << less<shared_ptr<int>>()(make_shared<int>(88)) << endl;
 /*
 typename allocator_traits<decltype(__alloc)>::rebind_alloc<int> _alloc;
 auto tmp1 = std::allocate_shared<int>(_alloc,8);
