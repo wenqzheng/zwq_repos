@@ -16,8 +16,8 @@
 #include <cstdlib>
 #include <atomic>
 
-template <typename T, typename __alloc = std::allocator<T>>
-class cache_freelist:__alloc, noncopyable
+template <typename T, typename Alloc = std::allocator<T>>
+class cache_freelist:Alloc
 {
     struct freelist_node
     {
@@ -36,23 +36,23 @@ private:
     void deallocate_impl(index_t n)
     {
         auto node = shared_ptr_wrapper<void>(n);
-        sp_node_ptr new_pool_ptr = convert<freelist_node>(node);
-        sp_node_ptr old_pool = cache_pool.load(memory_order_consume);
+        auto new_pool_ptr = node.convert<freelist_node>();
+        auto old_pool = cache_pool.load(memory_order_consume);
         sp_node_ptr new_pool;
         
         do {
             new_pool = new_pool_ptr;
             new_pool->next = old_pool;
-        } while (!cache_pool.cas_weak(&old_pool, new_pool));
+        } while (!cache_pool.cas_weak(old_pool, new_pool));
     }
 
     void deallocate_impl_unsafe(index_t n)
     {
         auto node = shared_ptr_wrapper<void>(n);
-        sp_node_ptr new_pool_ptr = convert<freelist_node>(node);
-
-        sp_node_ptr old_pool = cache_pool.load(std::memory_order_relaxed);
-        sp_node_ptr new_pool = new_pool_ptr;
+        auto old_pool = cache_pool.load(std::memory_order_relaxed);
+        
+        auto new_pool_ptr = node.convert<freelist_node>();
+        auto new_pool = new_pool_ptr;
         new_pool->next = old_pool;
 
         cache_pool.store(new_pool, std::memory_order_relaxed);
@@ -61,7 +61,7 @@ private:
     template <bool __bounded>
     index_t allocate_impl()
     {
-        sp_node_ptr old_pool = cache_pool.load(std::memory_order_consume);
+        auto old_pool = cache_pool.load(std::memory_order_consume);
         sp_node_ptr new_pool;
 
         do {
@@ -72,33 +72,33 @@ private:
                     return 0;
             }
 
-            sp_node_ptr new_pool_ptr = old_pool->next;
+            auto new_pool_ptr = old_pool->next;
             new_pool = new_pool_ptr;
-        } while (!cache_pool.cas_weak(&old_pool, new_pool));
+        } while (!cache_pool.cas_weak(old_pool, new_pool));
 	
         auto __tmp_ptr = old_pool;
-        return convert<T>(__tmp_ptr);
+        return __tmp_ptr.convert<T>();
     }
 
     template <bool __bounded>
     index_t allocate_impl_unsafe()
     {
-        sp_node_ptr old_pool = cache_pool.load(std::memory_order_relaxed);
+        auto old_pool = cache_pool.load(std::memory_order_relaxed);
 
-        if (!old_pool) {
+        if (!old_pool.get()) {
             if (!__bounded)
-                return std::allocate_shared<T>(__alloc());
+                return std::make_shared<T>();
             else
                 return 0;
         }
 
-        sp_node_ptr new_pool_ptr = old_pool->next;
-        sp_node_ptr new_pool = new_pool_ptr;
+        auto new_pool_ptr = old_pool->next;
+        auto new_pool = new_pool_ptr;
 
         cache_pool.store(new_pool, std::memory_order_relaxed);
         
-	auto __tmp_ptr = old_pool;
-        return convert<T>(__tmp_ptr);
+	    auto __tmp_ptr = old_pool;
+        return __tmp_ptr.convert<T>();
     }
 
 protected:
@@ -126,12 +126,12 @@ public:
     cache_freelist(const cache_freelist&) = default;
 
     template <typename Allocator>
-    cache_freelist(const Allocator& alloc, std::size_t n = 1):
-        __alloc(alloc),
+    cache_freelist(const Allocator& alloc, std::size_t n = 0):
+        Alloc(alloc),
         cache_pool(sp_node_ptr(nullptr))
     {
         for (std::size_t i = 0; i < n; ++i) {
-            index_t node = std::allocate_shared<T>(__alloc());
+            index_t node = std::make_shared<T>();
             deallocate<true>(node);
         }
     }
@@ -140,7 +140,7 @@ public:
     void reserve(std::size_t count)
     {
         for (std::size_t i = 0; i != count; ++i) {
-            index_t node = std::allocate_shared<T>(__alloc());
+            index_t node = std::make_shared<T>();
             deallocate<__threadsafe>(node);
         }
     }
@@ -162,16 +162,7 @@ public:
     }
 
     ~cache_freelist()
-    {
-        sp_node_ptr current = cache_pool.load();
-
-        while (current) {
-            sp_node_ptr current_ptr = current;
-            if (current_ptr)
-                current = current_ptr->next;
-            __alloc::deallocate(convert<T>(current_ptr), 1);
-        }
-    }
+    {}
 
     bool is_lock_free() const
     {
