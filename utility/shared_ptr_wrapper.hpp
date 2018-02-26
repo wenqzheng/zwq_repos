@@ -106,7 +106,7 @@ public:
     }
 
     shared_ptr_wrapper(const T& t):
-        shared_ptr_wrapper(std::make_shared<T>(t))
+        m_sp_ptr(std::make_shared<T>(t))
     {}
 
     shared_ptr_wrapper& operator=(const T& t)
@@ -159,7 +159,7 @@ public:
 
     explicit operator bool() const noexcept
     {
-        return get() != nullptr;
+        return m_sp_ptr.get() != nullptr;
     }
 
     shared_ptr_wrapper load(std::memory_order order = std::memory_order_seq_cst)
@@ -271,6 +271,16 @@ public:
         return *this;
     }
 
+    shared_ptr_wrapper(const std::shared_ptr<void>& sp):
+        m_sp_ptr(std::atomic_load(&sp))
+    {}
+
+    shared_ptr_wrapper& operator=(const std::shared_ptr<void>& sp)
+    {
+        std::atomic_store(&m_sp_ptr, sp);
+        return *this;
+    }
+
     template<typename U>
     shared_ptr_wrapper(const std::shared_ptr<U>& sp):
         m_sp_ptr(std::atomic_load(
@@ -303,8 +313,8 @@ public:
     shared_ptr_wrapper(const U& u)
     {
         std::shared_ptr<U> __tmp = std::make_shared<U>(u);
-        std::atomic_store(&m_sp_ptr,
-            *reinterpret_cast<std::shared_ptr<void>*>(&__tmp));
+        m_sp_ptr = std::atomic_load(
+            reinterpret_cast<std::shared_ptr<void>*>(&__tmp));
     }
 
     template<typename U>
