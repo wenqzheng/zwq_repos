@@ -15,6 +15,7 @@
 #include <array>
 #include <deque>
 #include <unordered_map>
+#include <any>
 
 using namespace std;
 
@@ -251,17 +252,13 @@ cout << "&ent4: " << &ent4 << endl;
 cout << "ent4.get: " << ent4 << endl;
 cout << "*ent4: " << *ent4 << endl;
 
-cout << endl << "test.get: " << ttest(5).get() << endl << endl;
-shared_ptr_wrapper<int> sp;
-auto tp = sp.convert<void>();
-cout << "convert: " << typeid(decltype(tp)).name() << endl;
-shared_ptr_wrapper<void> sp_a(sp);
-shared_ptr_wrapper<void> sp_b(sp);
-sp_a.cas_strong(sp_b,shared_ptr_wrapper<int>(88));
-cout << *(sp_a.convert<int>()) << endl;
-shared_ptr_wrapper<int> sp_c;
-sp_c.store(sp_a);
-cout << *sp_c << endl;
+//std::atomic<any> a;
+
+shared_ptr_wrapper<string> objs = std::make_shared<string>("zwq");
+auto lmd = [](auto&& obj) {
+    return std::forward<decltype(obj)>(obj);
+};
+std::atomic<decltype(lmd)> b;
 /*
 typename allocator_traits<decltype(__alloc)>::rebind_alloc<int> _alloc;
 auto tmp1 = std::allocate_shared<int>(_alloc,8);
