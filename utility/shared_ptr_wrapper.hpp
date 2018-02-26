@@ -1,5 +1,7 @@
 // shared_ptr_wrapper.hpp
 // ----by wenqzheng
+// HOOK MACRO __GTHREADS IN SHARED_PTR_ATOMIC.H FOR LOCK-FREE STD::SHARED_PTR.
+// WRAP THIS LOCK-FREE STD::SHARED_PTR FOR MULTI-THREADS.
 //-----------------------------------------------------------------------------
 
 #pragma once

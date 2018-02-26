@@ -253,6 +253,8 @@ cout << "*ent4: " << *ent4 << endl;
 
 cout << endl << "test.get: " << ttest(5).get() << endl << endl;
 shared_ptr_wrapper<int> sp;
+auto tp = sp.convert<void>();
+cout << "convert: " << typeid(decltype(tp)).name() << endl;
 shared_ptr_wrapper<void> sp_a(sp);
 shared_ptr_wrapper<void> sp_b(sp);
 sp_a.cas_strong(sp_b,shared_ptr_wrapper<int>(88));
