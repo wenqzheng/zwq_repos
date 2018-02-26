@@ -452,7 +452,7 @@ public:
 
     weak_ptr_wrapper& operator=(weak_ptr_wrapper&& wp)
     {
-        m_wp_ptr = std::atomic_load(&(wp.m_wp_ptr));
+        m_wp_ptr = wp.m_wp_ptr;
         return *this;
     }
 
@@ -570,25 +570,25 @@ public:
 
     template<typename U>
     weak_ptr_wrapper(const std::weak_ptr<U>& wp):
-        m_wp_ptr(reinterpret_cast<const std::weak_ptr<T>*>(&wp))
+        m_wp_ptr(*reinterpret_cast<const std::weak_ptr<T>*>(&wp))
     {}
 
     template<typename U>
     weak_ptr_wrapper(std::weak_ptr<U>&& wp):
-        m_wp_ptr(reinterpret_cast<std::weak_ptr<T>*>(&wp))
+        m_wp_ptr(*reinterpret_cast<std::weak_ptr<T>*>(&wp))
     {}
 
     template<typename U>
     weak_ptr_wrapper& operator=(const std::weak_ptr<U>& wp)
     {
-        m_wp_ptr = reinterpret_cast<const std::weak_ptr<T>*>(&wp);
+        m_wp_ptr = *reinterpret_cast<const std::weak_ptr<T>*>(&wp);
         return *this;
     }
 
     template<typename U>
     weak_ptr_wrapper& operator=(std::weak_ptr<U>&& wp)
     {
-        m_wp_ptr = reinterpret_cast<std::weak_ptr<T>*>(&wp);
+        m_wp_ptr = *reinterpret_cast<std::weak_ptr<T>*>(&wp);
         return *this;
     }
 
@@ -652,14 +652,16 @@ public:
 
     void reset() noexcept
     {
-        std::weak_ptr<T> __tmp_wptr;
-        std::shared_ptr<T> __tmp_sptr = __tmp_wptr.lock();
-        m_wp_ptr = std::atomic_load(&__tmp_sptr);
+        m_wp_ptr = std::weak_ptr<T>();
     }
 
     void swap(weak_ptr_wrapper& wp) noexcept
     {
-        wp.lock().exchange(lock());
+        std::atomic_exchange(
+            reinterpret_cast<std::shared_ptr<T>*>(&m_wp_ptr),
+            std::atomic_exchange(
+                reinterpret_cast<std::shared_ptr<T>*>(&(wp.m_wp_ptr)),
+                *reinterpret_cast<std::shared_ptr<T>*>(&m_wp_ptr)));
     }
 
     explicit operator bool() const noexcept
@@ -669,21 +671,28 @@ public:
 
     weak_ptr_wrapper load(std::memory_order order = std::memory_order_seq_cst)
     {
-        return lock().load(order);
+        std::shared_ptr<T> __tmp_ptr = std::atomic_load(
+            reinterpret_cast<std::shared_ptr<T>*>(&m_wp_ptr));
+        return *reinterpret_cast<std::weak_ptr<T>*>(__tmp_ptr);
     }
 
     template<typename U>
     void store(weak_ptr_wrapper<U> wp_other,
         std::memory_order order = std::memory_order_seq_cst)
     {
-        lock().store(wp_other.lock(), order);
+        std::atomic_store(
+            reinterpret_cast<std::shared_ptr<T>*>(&m_wp_ptr),
+            *reinterpret_cast<std::shared_ptr<T>*>(&(wp_other.m_wp_ptr)));
     }
 
     template<typename U>
     weak_ptr_wrapper exchange(weak_ptr_wrapper<U> wp_W,
         std::memory_order order = std::memory_order_seq_cst)
     {
-        return lock().exchange(wp_W.lock(), order);
+        std::shared_ptr<T> __tmp_ptr = std::atomic_exchange(
+            reinterpret_cast<std::shared_ptr<T>*>(&m_wp_ptr),
+            *reinterpret_cast<std::shared_ptr<T>*>(&(wp_W.m_wp_ptr)));
+        return *reinterpret_cast<std::weak_ptr<T>*>(&__tmp_ptr);
     }
 
     template<typename U1, typename U2>
@@ -692,9 +701,10 @@ public:
         std::memory_order success = std::memory_order_seq_cst,
         std::memory_order failure = std::memory_order_seq_cst)
     {
-        return lock().cas_weak(
-            expected.lock(),
-            desired.lock(),
+        return std::atomic_compare_exchange_weak_explicit(
+            reinterpret_cast<std::shared_ptr<T>*>(&m_wp_ptr),
+            reinterpret_cast<std::shared_ptr<T>*>(&(expected.m_wp_ptr)),
+            *reinterpret_cast<std::shared_ptr<T>*>(&(desired.m_wp_ptr)),
             success,
             failure);
     }
@@ -705,9 +715,10 @@ public:
         std::memory_order success = std::memory_order_seq_cst,
         std::memory_order failure = std::memory_order_seq_cst)
     {
-        return lock().cas_strong(
-            expected.lock(),
-            desired.lock(),
+         return std::atomic_compare_exchange_strong_explicit(
+            reinterpret_cast<std::shared_ptr<T>*>(&m_wp_ptr),
+            reinterpret_cast<std::shared_ptr<T>*>(&(expected.m_wp_ptr)),
+            *reinterpret_cast<std::shared_ptr<T>*>(&(desired.m_wp_ptr)),
             success,
             failure);
     }
@@ -715,6 +726,6 @@ public:
     template<typename U>
     weak_ptr_wrapper<U> convert()
     {
-        return lock().convert();
+        return reinterpret_cast<shared_ptr_wrapper<T>*>(&m_wp_ptr)->convert();
     }
 };

@@ -279,6 +279,9 @@ if (newwp) cout << "go 1" << endl;else cout << "go 0" << endl;
 cout << "aut.get: " << tmp12.get() << endl;
 cout << "use count: " << newwp.use_count() << endl;
 if (newwp) cout << "go 1" << endl;else cout << "go 0" << endl;
+shared_ptr_wrapper<int> zwq1;
+weak_ptr_wrapper<string> zwq2(zwq1);
+cout << typeid(decltype(zwq2.lock())).name() << endl;
 /*
 typename allocator_traits<decltype(__alloc)>::rebind_alloc<int> _alloc;
 auto tmp1 = std::allocate_shared<int>(_alloc,8);
