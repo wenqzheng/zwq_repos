@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "../utility.hpp"
 #include "noncopyable.hpp"
 #include <type_traits>
 #include <utility>

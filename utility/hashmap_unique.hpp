@@ -6,6 +6,7 @@
 #pragma once
 
 #include "smart_ptr_wrapper.hpp"
+#include "../utility.hpp"
 #include <cstdint>
 #include <cassert>
 #include <thread>
@@ -15,26 +16,6 @@
 #include <atomic>
 #include <urcu-bp.h>
 #include <urcu/rculfhash.h>
-
-#define __likely(x) __builtin_expect(!!(x),1)
-#define __unlikely(x) __builtin_expect(!!(x),0)
-
-namespace __inner_wg
-{
-    constexpr unsigned long __power2(const unsigned long& size)
-    {
-        assert(size >= 0 && size <= ULONG_MAX);
-        if (0 == size)
-            return 0;
-        else {
-            for (auto i = 0; i < 63; ++i)
-                if (!(size >> (i + 1)))
-                    return (1 << i);
-        }
-
-        return 0;
-    }
-};
 
 template<typename keyType, typename valueType,
     class hashFunc = std::hash<keyType>>
@@ -72,9 +53,9 @@ public:
     hashmap(unsigned long init_size = std::thread::hardware_concurrency(),
         unsigned long min_nr_alloc_buckets = std::thread::hardware_concurrency(),
         unsigned long max_nr_buckets = 0)
-        :ht(cds_lfht_new(__inner_wg::__power2(init_size),
-            __inner_wg::__power2(min_nr_alloc_buckets),
-            __inner_wg::__power2(max_nr_buckets),
+        :ht(cds_lfht_new(__power2(init_size),
+            __power2(min_nr_alloc_buckets),
+            __power2(max_nr_buckets),
             CDS_LFHT_AUTO_RESIZE|CDS_LFHT_ACCOUNTING,
             NULL))
     {}

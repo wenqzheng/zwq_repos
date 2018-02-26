@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "../utility.hpp"
 #include "shared_ptr_wrapper.hpp"
 #include "function_wrapper.hpp"
 #include "hashmap_unique.hpp"

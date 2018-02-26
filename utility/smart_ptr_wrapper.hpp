@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "../utility.hpp"
 #include <memory>
 #include <atomic>
 #include <cstddef>
@@ -73,7 +74,7 @@ struct std::greater_equal<shared_ptr_wrapper<U>>
 
 
 template<typename T>
-class alignas(sizeof(std::shared_ptr<void>)) shared_ptr_wrapper
+class alignas(__power2(sizeof(std::shared_ptr<void>))) shared_ptr_wrapper
 {
 private:
     std::shared_ptr<T> m_sp_ptr;
@@ -285,7 +286,7 @@ public:
 
 
 template<>
-class alignas(sizeof(std::shared_ptr<void>)) shared_ptr_wrapper<void>
+class alignas(__power2(sizeof(std::shared_ptr<void>))) shared_ptr_wrapper<void>
 {
 private:
     std::shared_ptr<void> m_sp_ptr;
@@ -511,7 +512,7 @@ struct std::greater<weak_ptr_wrapper<U>>
         const weak_ptr_wrapper<U>& wp_U2)
     {
         return std::greater<std::weak_ptr<U>>()(
-            wp_U1.m_wp_ptr, sp_U2.m_wp_ptr);
+            wp_U1.m_wp_ptr, wp_U2.m_wp_ptr);
     }
 };
 
@@ -528,7 +529,7 @@ struct std::greater_equal<weak_ptr_wrapper<U>>
 
 
 template<typename T>
-class alignas(sizeof(std::weak_ptr<void>)) weak_ptr_wrapper
+class alignas(__power2(sizeof(std::weak_ptr<void>))) weak_ptr_wrapper
 {
 private:
     std::weak_ptr<T> m_wp_ptr;

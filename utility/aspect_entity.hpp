@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "../utility.hpp"
 #include "shared_ptr_wrapper.hpp"
 #include <functional>
 #include <type_traits>

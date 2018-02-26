@@ -285,16 +285,8 @@ if (zwq1) cout << "zwq1 == nullptr" << endl;else cout << "zwq1 not nullptr" << e
 if (zwq1) cout << "zwq1 == void" << endl;else cout << "zwq1 not void" << endl;
 if (zwq2) cout << "zwq2 == nullptr" << endl;else cout << "zwq2 not nullptr" << endl;
 if (zwq2) cout << "zwq2 == void" << endl;else cout << "zwq2 not void" << endl;
-std::less<int> lessint;
-std::less<shared_ptr<string>> sp_lessint;
-std::less<weak_ptr<int>> lessweakint;
-if (sp_lessint(make_shared<string>(string("zwq")),make_shared<string>(string("OK"))))
-    cout << "larger" << endl;
-else
-    cout << "less" << endl;
-std::hash<shared_ptr_wrapper<int>> hashint;
-cout << hashint(shared_ptr_wrapper<int>(make_shared<int>(88))) << endl;
-std::hash<shared_ptr<int>> hashweakint;
+cout << "alignment of: " << alignment_of_v<shared_ptr_wrapper<void>> << endl;
+
 //cout << "less" << less<shared_ptr<int>>()(make_shared<int>(88)) << endl;
 /*
 typename allocator_traits<decltype(__alloc)>::rebind_alloc<int> _alloc;
