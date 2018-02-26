@@ -6,12 +6,19 @@
 
 #include <climits>
 #include <cassert>
+#include <cstddef>
 
 #if defined(powerpc) || defined(__powerpc__) || defined(__ppc__)
-#    define CACHE_LINE_SIZE 128
+#    define __CACHE_LINE_SIZE 128
 #else
-#    define CACHE_LINE_SIZE 64
+#    define __CACHE_LINE_SIZE 64
 #endif
+
+#define __container_of(ptr, type, field)                        \
+({                                                              \
+     const typedef(((type*)NULL)->field)* __tmp_ptr = (ptr);    \
+     (type*)((char*)__tmp_ptr - offsetof(type, field));         \
+})
 
 inline bool __likely(bool expr)
 {
@@ -31,7 +38,7 @@ inline bool __unlikely(bool expr)
 #endif
 }
 
-constexpr unsigned long __power2(const unsigned long& size)
+inline constexpr unsigned long __power2(const unsigned long& size)
 {
     assert(size >= 0 && size <= ULONG_MAX);
     if (0 == size)
@@ -44,5 +51,3 @@ constexpr unsigned long __power2(const unsigned long& size)
 
     return 0;
 }
-
-
