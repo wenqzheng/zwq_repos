@@ -7,6 +7,7 @@
 #include <climits>
 #include <cassert>
 #include <cstddef>
+#include <memory>
 
 #if defined(powerpc) || defined(__powerpc__) || defined(__ppc__)
 #    define __CACHE_LINE_SIZE 128
@@ -14,9 +15,9 @@
 #    define __CACHE_LINE_SIZE 64
 #endif
 
-#define __container_of(ptr, type, field)                        \
+#define __container_of(ptr,type,field)                          \
 ({                                                              \
-     const typedef(((type*)NULL)->field)* __tmp_ptr = (ptr);    \
+     const decltype(((type*)NULL)->field)* __tmp_ptr = (ptr);   \
      (type*)((char*)__tmp_ptr - offsetof(type, field));         \
 })
 

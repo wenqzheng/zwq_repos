@@ -21,7 +21,6 @@ using namespace std;
 
 struct AA
 {
-
     void front(int a)
     {
         cout << "front from AA: " << a << endl;
@@ -31,6 +30,9 @@ struct AA
     {
         cout << "back from AA: " << a << endl;
     }
+    int a;
+    int b;
+    int c;
 };
 
 struct BB
@@ -286,13 +288,9 @@ if (zwq1) cout << "zwq1 == void" << endl;else cout << "zwq1 not void" << endl;
 if (zwq2) cout << "zwq2 == nullptr" << endl;else cout << "zwq2 not nullptr" << endl;
 if (zwq2) cout << "zwq2 == void" << endl;else cout << "zwq2 not void" << endl;
 
-shared_ptr<int> inna = make_shared<int>(88);
-auto innb = shared_ptr<int>(inna.get());
-cout << inna.get() << endl << innb.get() << endl;
-cout << "inna lock free? " << atomic_is_lock_free(&inna) << endl;
-cout << "innb lock free? " << atomic_is_lock_free(&innb) << endl;
-
-const shared_ptr<void> csv;
+atomic<shared_ptr_wrapper<AA>*> left;
+cout << "is AA* lock free? " << atomic_is_lock_free(&left) << endl;
+//shared_ptr_wrapper<AA> innb = __sp_container_of(&(inna->b), AA, b);
 
 //cout << "less" << less<shared_ptr<int>>()(make_shared<int>(88)) << endl;
 /*
