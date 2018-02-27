@@ -16,6 +16,7 @@
 #include <deque>
 #include <unordered_map>
 #include <any>
+#include <variant>
 
 using namespace std;
 
@@ -72,56 +73,39 @@ int GT()
     cout << "GT function" << endl;
     return 5;
 }
-template<typename T>
-class A
-{
-};
-template<typename T>
-class B:public A<T>
-{};
-template<typename T>
-class C:public A<T>
+
+template<typename dataType>
+struct Inf0
 {};
 
-template<typename T>
-class arr
+template<typename dataType>
+struct Inf1
+{};
+
+template<typename U>
+class lessme
 {
-    public:
-        T num[18];
-};
-
-#define REGKEY(KEY,...) \
-enum KEY                \
-{   \
-__VA_ARGS__    \
-}
-
-//#define eenum(...) __VA_ARGS__
-
-
-//REGKEY(NEWKEY,key_1,key_2,key_3);
-REGKEY(key,key1,key2,key3);
-REGKEY(oldkey,oldkey1,oldkey2,oldkey3);
-/*
-    enum NEWKEY {
-        key_1,
-        key_2,
-        key_3
-    };
-*/
-
-#define CONBINE(PREFIX,...)
-
-auto ttest(int i)
-{
-    auto tmp1 = make_shared<int>(i);
-    cout << "tmp1.get: " << tmp1.get() << endl;
+public:
+    constexpr bool operator()(const U& _u1, const U& _u2) const
     {
-        auto tmp2 = tmp1;
-        cout << "tmp2.get: " << tmp2.get() << endl;
-        return tmp2;
+        return std::less<U>()(_u1, _u2);
     }
-}
+
+    constexpr bool operator()(const U&, const Inf0<U>&) const
+    {
+        return true;
+    }
+
+    constexpr bool operator()(const U&, const Inf1<U>&) const
+    {
+        return true;
+    }
+
+    constexpr bool operator()(const Inf0<U>&, const Inf1<U>&) const
+    {
+        return true;
+    }
+};
 
 int main()
 {
@@ -258,85 +242,16 @@ cout << "&ent4: " << &ent4 << endl;
 cout << "ent4.get: " << ent4 << endl;
 cout << "*ent4: " << *ent4 << endl;
 
-//std::atomic<any> a;
+int a = 88;
+if (lessme<int>()(88, Inf0<int>())) cout << "less OK" << endl;
 
-shared_ptr_wrapper<string> objs = std::make_shared<string>("zwq");
-auto lmd = [](auto&& obj) {
-    return std::forward<decltype(obj)>(obj);
-};
-
-shared_ptr_wrapper<int> tmp11 = make_shared<int>(88);
-cout<< "is shared_ptr_wrapper lock free? " << atomic_is_lock_free(reinterpret_cast<shared_ptr<void>*>(&tmp11)) << endl;
-cout << "alignment of: " << alignment_of_v<shared_ptr_wrapper<int>> << endl;
-shared_ptr_wrapper<int> tmp12 = make_shared<int>(44);
-shared_ptr_wrapper<int> tmp(tmp11);
-weak_ptr_wrapper<void> newwp(tmp11);
-if (newwp) cout << "go 1" << endl;else cout << "go 0" << endl;
-cout << "use count: " << newwp.use_count() << endl;
-tmp = tmp12;
-cout << "use count: " << newwp.use_count() << endl;
-if (newwp) cout << "go 1" << endl;else cout << "go 0" << endl;
-newwp.reset();
-if (newwp) cout << "go 1" << endl;else cout << "go 0" << endl;
-cout << "use count: " << newwp.use_count() << endl;
-tmp12 = newwp.lock();
-cout << "type aut: " << typeid(decltype(tmp12)).name() << endl;
-if (newwp) cout << "go 1" << endl;else cout << "go 0" << endl;
-cout << "aut.get: " << tmp12.get() << endl;
-cout << "use count: " << newwp.use_count() << endl;
-if (newwp) cout << "go 1" << endl;else cout << "go 0" << endl;
-shared_ptr_wrapper<void> zwq1;
-shared_ptr_wrapper<nullptr_t> zwq2;
-if (zwq1) cout << "zwq1 == nullptr" << endl;else cout << "zwq1 not nullptr" << endl;
-if (zwq1) cout << "zwq1 == void" << endl;else cout << "zwq1 not void" << endl;
-if (zwq2) cout << "zwq2 == nullptr" << endl;else cout << "zwq2 not nullptr" << endl;
-if (zwq2) cout << "zwq2 == void" << endl;else cout << "zwq2 not void" << endl;
-auto newsp=make_shared<AA>(1,2,3,nullptr);
-//shared_ptr_wrapper<AA> innb = __sp_container_of(&(inna->b), AA, b);
-
-//cout << "less" << less<shared_ptr<int>>()(make_shared<int>(88)) << endl;
-/*
-typename allocator_traits<decltype(__alloc)>::rebind_alloc<int> _alloc;
-auto tmp1 = std::allocate_shared<int>(_alloc,8);
-auto tmp2 = std::allocate_shared<int>(_alloc,16);
-auto tmp3 = std::allocate_shared<int>(_alloc,32);
-auto tmp4 = std::allocate_shared<int>(_alloc,64);
-cout << typeid(decltype(tmp1)).name() << endl;
-cout << "&tmp1: " << &tmp1 << endl;
-cout << "tmp1.get: " << tmp1.get() << endl;
-cout << "*tmp1: " << *tmp1 << endl;
-cout << typeid(decltype(tmp2)).name() << endl;
-cout << "&tmp2: " << &tmp2 << endl;
-cout << "tmp2.get: " << tmp2.get() << endl;
-cout << "*tmp2: " << *tmp2 << endl;
-cout << typeid(decltype(tmp3)).name() << endl;
-cout << "&tmp3: " << &tmp3 << endl;
-cout << "tmp3.get: " << tmp3.get() << endl;
-cout << "*tmp3: " << *tmp3 << endl;
-cout << typeid(decltype(tmp4)).name() << endl;
-cout << "&tmp4: " << &tmp4 << endl;
-cout << "tmp4.get: " << tmp4.get() << endl;
-cout << "*tmp4: " << *tmp4 << endl;
-auto ent1 = _alloc.allocate(1);_alloc.construct(ent1,3);
-auto ent2 = _alloc.allocate(1);_alloc.construct(ent2,4);
-auto ent3 = _alloc.allocate(1);_alloc.construct(ent3,5);
-auto ent4 = _alloc.allocate(1);_alloc.construct(ent4,6);
-cout << typeid(decltype(ent1)).name() << endl;
-cout << "&ent1: " << &ent1 << endl;
-cout << "ent1.get: " << ent1 << endl;
-cout << "*ent1: " << *ent1 << endl;
-cout << typeid(decltype(ent2)).name() << endl;
-cout << "&ent2: " << &ent2 << endl;
-cout << "ent2.get: " << ent2 << endl;
-cout << "*ent2: " << *ent2 << endl;
-cout << typeid(decltype(ent3)).name() << endl;
-cout << "&ent3: " << &ent3 << endl;
-cout << "ent3.get: " << ent3 << endl;
-cout << "*ent3: " << *ent3 << endl;
-cout << typeid(decltype(ent4)).name() << endl;
-cout << "&ent4: " << &ent4 << endl;
-cout << "ent4.get: " << ent4 << endl;
-cout << "*ent4: " << *ent4 << endl;
-*/
+variant<int,double> pint1 = 44;
+variant<int,double> pint2 = 88;
+variant<int,double> pint3 = 55.4;
+variant<int,double> pint4 = 88.9;
+variant<int,double> pint5 = pint1;
+cout << sizeof(variant<int,double>(8)) << endl;
+cout << sizeof(pint3) << endl;
+cout << pint2.index() << endl;
 return 0;
 }
