@@ -86,7 +86,7 @@ class bstree
 {
     using __VAR = std::variant<dataType, Inf0<dataType>, Inf1<dataType>>;
     class alignas(__CACHE_LINE_SIZE) relinfo;
-    class alignas(__CACHE_LINE_SIZE) treenode;
+    class alignas(__power2(sizeof(dataType))) entity;
 
     class alignas(2 * sizeof(shared_ptr_wrapper<void>)) updateflag
     {
@@ -103,32 +103,6 @@ class bstree
             const shared_ptr_wrapper<relinfo>& __info = nullptr):
             isDirty(__isdirty.load()),
             info(__info)
-        {}
-    };
-
-    class alignas(__power2(sizeof(dataType))) entity
-    {
-    public:
-        __VAR data;
-        treenode node;
-    
-        entity(const entity& __entity):
-            data(__VAR(__entity.data)), node(__entity.node)
-        {}
-
-        entity(const dataType& __data = dataType(),
-            const treenode& __node = treenode()):
-            data(__VAR(__data), node(__node)
-        {}
-
-        entity(const Inf0<dataType>& __data,
-            const treenode& __node = treenode()):
-            data(__VAR(__data)), node(__node)
-        {}
-
-        entity(const Inf1<dataType>& __data,
-            const treenode& __node = treenode()):
-            data(__VAR(__data)), node(__node)
         {}
     };
 
@@ -162,6 +136,37 @@ class bstree
             left(__left),
             right(__right),
             update(__update)
+        {}
+    };
+
+    class alignas(__power2(sizeof(dataType))) entity
+    {
+    public:
+        __VAR data;
+        treenode node;
+    
+        entity(const entity& __entity):
+            data(__VAR(__entity.data)), node(__entity.node)
+        {}
+
+        entity(const dataType& __data = dataType(),
+            const treenode& __node = treenode()):
+            data(__VAR(__data)), node(__node)
+        {}
+
+        entity(const __VAR& __var,
+            const treenode& __node = treenode()):
+            data(__var), node(__node)
+        {}
+
+        entity(const Inf0<dataType>& __data,
+            const treenode& __node = treenode()):
+            data(__VAR(__data)), node(__node)
+        {}
+
+        entity(const Inf1<dataType>& __data,
+            const treenode& __node = treenode()):
+            data(__VAR(__data)), node(__node)
         {}
     };
 
