@@ -4,19 +4,19 @@
 
 #pragma once
 
-#include "utility.hpp"
-#include "smart_ptr_wrapper.hpp"
+#include "../utility.hpp"
+#include "../utility/smart_ptr_wrapper.hpp"
 #include <algorithm>
 #include <atomic>
 #include <cstdint>
 #include <climits>
 
-template<typename dataType, class compare = std::less<datatype>>
+constexpr std::size_t inf1 = SIZE_MAX-1;
+constexpr std::size_t inf2 = SIZE_MAX;
+
+template<typename dataType, class compare = std::less<dataType>>
 class bstree
 {
-    constexpr std::size_t inf1 = SIZE_MAX-1;
-    constexpr std::size_t inf2 = SIZE_MAX;
-
     struct relinfo;
     struct treenode;
 
@@ -54,7 +54,7 @@ class bstree
             shared_ptr_wrapper<entity> __right = nullptr,
             shared_ptr_wrapper<updateflag> __update =
                 std::make_shared<updateflag>()):
-            isLeaf(__isLeaf)
+            isLeaf(__isLeaf),
             left(__left),
             right(__right),
             update(__update)
@@ -80,11 +80,11 @@ class bstree
     {
         shared_ptr_wrapper<entity> parent;
         shared_ptr_wrapper<entity> self;
-        shared_ptrwrapper<updateflag> pupdate;
+        shared_ptr_wrapper<updateflag> pupdate;
 
         searchresult(const shared_ptr_wrapper<entity>& __parent = nullptr,
             const shared_ptr_wrapper<entity>& __self = nullptr,
-            const shared_ptr_wrapper<updateflag> __pupdate) = NULL:
+            const shared_ptr_wrapper<updateflag> __pupdate = NULL):
             parent(__parent), self(__self), pupdate(__pupdate)
         {}
     };
@@ -116,12 +116,12 @@ public:
                 self = parent->node.left;
             else
                 self = parent->node.right;
-        } while (!(self->node.isLeaf))
+        } while (!(self->node.isLeaf));
 
         return std::make_shared<searchresult>(parent, self, pupdate);
     }
 
-    bool insert(const dateType& __data)
+    bool insert(const dataType& __data)
     {
         shared_ptr_wrapper<entity> parent;
         shared_ptr_wrapper<entity> self;
@@ -148,11 +148,11 @@ public:
                 if (newentity->data < sibling->data)
                     newinternal = std::make_shared<entity>(
                         std::max(__data, self->data, compare()),
-                        treenode(false, newnode,sibling));
+                        treenode(false, newentity, sibling));
                 else
                     newinternal = std::make_shared<entity>(
                         std::max(__data, self->data, compare()),
-                        treenode(false, sibling, newnode));
+                        treenode(false, sibling, newentity));
                 record = std::make_shared<relinfo>(parent, self, newinternal);
 
                 shared_ptr_wrapper<updateflag> dirty =
