@@ -301,12 +301,10 @@ public:
         shared_ptr_wrapper<updateflag> clean =
             std::make_shared<updateflag>(false, __record);
 
-        shared_ptr_wrapper<entity>* tochange;
         if (__lessexp<dataType>()(subtree->data, parent->data))
-            tochange = &(parent->node.left);
+            parent->node.left.cas_strong(leaf, subtree);
         else
-            tochange = &(parent->node.right);
-        tochange->cas_strong(leaf, subtree);
+            parent->node.right.cas_strong(leaf, subtree);
 
         __record->parent->node.update.cas_strong(dirty, clean);
     }
@@ -315,13 +313,12 @@ public:
 int main()
 {
     bstree<int> bst;
-    bst.insert(4);
+//    bst.insert(4);
 //    bst.insert(8);
 //    bst.insert(1);
 //    bst.insert(2);
 //    bst.insert(7);
     std::cout << __equalexp<int>()(8,8) << std::endl;
-//    std::cout << bst.insert(9) << std::endl;
 //    std::cout << bst.insert(8) << std::endl;
     return 0;
 }
