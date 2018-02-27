@@ -11,26 +11,17 @@
 #include <climits>
 #include <variant>
 #include <iostream>
+
 template<typename U>
 struct Inf0
 {
     U index;
-    constexpr Inf0() = default;
-
-    Inf0(const Inf0& __inf):
-        index(__inf.index)
-    {}
 };
 
 template<typename U>
 struct Inf1
 {
     U index;
-    constexpr Inf1() = default;
-
-    Inf1(const Inf1& __inf):
-        index(__inf.index)
-    {}
 };
 
 template<typename U>
@@ -39,7 +30,7 @@ struct __lessexp
     using __VAR = std::variant<U, Inf0<U>, Inf1<U>>;
     constexpr bool operator()(const __VAR& __v1, const __VAR& __v2) const
     {
-        if (!(__v1.index() == __v2.index()))
+        if (__v1.index() != __v2.index())
             return std::less<std::size_t>()(__v1.index(), __v2.index());
         else if (0 == __v1.index())
             return std::less<U>()(*reinterpret_cast<const U*>(&__v1),
@@ -55,7 +46,7 @@ struct __equalexp
     using __VAR = std::variant<U, Inf0<U>, Inf1<U>>;
     constexpr bool operator()(const __VAR& __v1, const __VAR& __v2) const
     {
-        if (!(__v1.index() == __v2.index()))
+        if (__v1.index() != __v2.index())
             return false;
         else if (0 == __v1.index())
             return !std::not_equal_to<U>()(*reinterpret_cast<const U*>(&__v1),
@@ -71,7 +62,7 @@ struct __greaterexp
     using __VAR = std::variant<U, Inf0<U>, Inf1<U>>;
     constexpr bool operator()(const __VAR& __v1, const __VAR& __v2) const
     {
-        if (!(__v1.index() == __v2.index()))
+        if (__v1.index() != __v2.index())
             return std::greater<std::size_t>()(__v1.index(), __v2.index());
         else if (0 == __v1.index())
             return std::greater<U>()(*reinterpret_cast<const U*>(&__v1),
@@ -86,7 +77,7 @@ class bstree
 {
     using __VAR = std::variant<dataType, Inf0<dataType>, Inf1<dataType>>;
     class alignas(__CACHE_LINE_SIZE) relinfo;
-    class alignas(__power2(sizeof(dataType))) entity;
+    class alignas(__CACHE_LINE_SIZE) entity;
 
     class alignas(2 * sizeof(shared_ptr_wrapper<void>)) updateflag
     {
@@ -139,7 +130,7 @@ class bstree
         {}
     };
 
-    class alignas(__power2(sizeof(dataType))) entity
+    class alignas(__CACHE_LINE_SIZE) entity
     {
     public:
         __VAR data;
@@ -149,14 +140,14 @@ class bstree
             data(__VAR(__entity.data)), node(__entity.node)
         {}
 
-        entity(const dataType& __data = dataType(),
-            const treenode& __node = treenode()):
-            data(__VAR(__data)), node(__node)
-        {}
-
         entity(const __VAR& __var,
             const treenode& __node = treenode()):
             data(__var), node(__node)
+        {}
+
+        entity(const dataType& __data = dataType(),
+            const treenode& __node = treenode()):
+            data(__VAR(__data)), node(__node)
         {}
 
         entity(const Inf0<dataType>& __data,
@@ -183,12 +174,6 @@ class bstree
             subtree(__record.subtree)
         {}
 
-        relinfo(relinfo&& __record):
-            parent(__record.parent),
-            leaf(__record.leaf),
-            subtree(__record.subtree)
-        {}
-
         relinfo(const shared_ptr_wrapper<entity>& __parent = nullptr,
             const shared_ptr_wrapper<entity>& __leaf = nullptr,
             const shared_ptr_wrapper<entity>& __subtree = nullptr):
@@ -206,12 +191,6 @@ class bstree
         shared_ptr_wrapper<updateflag> pupdate;
 
         searchresult(const searchresult& __search):
-            parent(__search.parent),
-            self(__search.self),
-            pupdate(__search.pupdate)
-        {}
-
-        searchresult(searchresult&& __search):
             parent(__search.parent),
             self(__search.self),
             pupdate(__search.pupdate)
@@ -337,11 +316,12 @@ int main()
 {
     bstree<int> bst;
     bst.insert(4);
-    bst.insert(8);
-    bst.insert(1);
-    bst.insert(2);
-    bst.insert(7);
-    std::cout << bst.insert(9) << std::endl;
-    std::cout << bst.insert(8) << std::endl;
+//    bst.insert(8);
+//    bst.insert(1);
+//    bst.insert(2);
+//    bst.insert(7);
+    std::cout << __equalexp<int>()(8,8) << std::endl;
+//    std::cout << bst.insert(9) << std::endl;
+//    std::cout << bst.insert(8) << std::endl;
     return 0;
 }

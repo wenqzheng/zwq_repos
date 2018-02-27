@@ -242,10 +242,11 @@ cout << "&ent4: " << &ent4 << endl;
 cout << "ent4.get: " << ent4 << endl;
 cout << "*ent4: " << *ent4 << endl;
 
-int a = 88;
-if (lessme<int>()(88, Inf0<int>())) cout << "less OK" << endl;
 
-variant<int,AA> pint1 = 44;
-cout << pint1 << endl;
+variant<int,string> a("zwq");
+string s = "OK";
+variant<int,string> b = variant<int, string>(s);
+cout << b.index() << endl;
+
 return 0;
 }
