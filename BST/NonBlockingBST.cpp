@@ -16,6 +16,7 @@
 #include <cstdlib>
 #include <algorithm>
 #include "BSTclass.h"
+#include "BST.cpp"
 
 using namespace std;
 
@@ -80,4 +81,10 @@ bool NonBlockingBST::CASChild(treeNode *parent, treeNode *oldNode, treeNode *new
     childToChange = &(parent->right);
   
   return childToChange->compare_exchange_strong(oldNode, newNode);
+}
+
+int main()
+{
+    NonBlockingBST bst;
+    bst.insert(4);
 }

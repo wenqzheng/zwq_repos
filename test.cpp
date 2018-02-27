@@ -33,6 +33,10 @@ struct AA
     int a;
     int b;
     int c;
+    shared_ptr_wrapper<int> spi;
+    AA(int _a, int _b, int _c, shared_ptr_wrapper<int> _spi):
+        a(_a), b(_b), c(_c), spi(_spi)
+    {}
 };
 
 struct BB
@@ -287,9 +291,7 @@ if (zwq1) cout << "zwq1 == nullptr" << endl;else cout << "zwq1 not nullptr" << e
 if (zwq1) cout << "zwq1 == void" << endl;else cout << "zwq1 not void" << endl;
 if (zwq2) cout << "zwq2 == nullptr" << endl;else cout << "zwq2 not nullptr" << endl;
 if (zwq2) cout << "zwq2 == void" << endl;else cout << "zwq2 not void" << endl;
-
-atomic<shared_ptr_wrapper<AA>*> left;
-cout << "is AA* lock free? " << atomic_is_lock_free(&left) << endl;
+auto newsp=make_shared<AA>(1,2,3,nullptr);
 //shared_ptr_wrapper<AA> innb = __sp_container_of(&(inna->b), AA, b);
 
 //cout << "less" << less<shared_ptr<int>>()(make_shared<int>(88)) << endl;
