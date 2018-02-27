@@ -245,13 +245,7 @@ cout << "*ent4: " << *ent4 << endl;
 int a = 88;
 if (lessme<int>()(88, Inf0<int>())) cout << "less OK" << endl;
 
-variant<int,double> pint1 = 44;
-variant<int,double> pint2 = 88;
-variant<int,double> pint3 = 55.4;
-variant<int,double> pint4 = 88.9;
-variant<int,double> pint5 = pint1;
-cout << sizeof(variant<int,double>(8)) << endl;
-cout << sizeof(pint3) << endl;
-cout << pint2.index() << endl;
+variant<int,AA> pint1 = 44;
+cout << pint1 << endl;
 return 0;
 }

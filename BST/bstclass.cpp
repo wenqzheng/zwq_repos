@@ -10,7 +10,7 @@
 #include <cstdint>
 #include <climits>
 #include <variant>
-
+#include <iostream>
 template<typename U>
 struct Inf0
 {
@@ -341,5 +341,7 @@ int main()
     bst.insert(1);
     bst.insert(2);
     bst.insert(7);
+    std::cout << bst.insert(9) << std::endl;
+    std::cout << bst.insert(8) << std::endl;
     return 0;
 }
