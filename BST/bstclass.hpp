@@ -1,24 +1,15 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+// bstree.hpp
+// ----by wenqzheng
+//-----------------------------------------------------------------------------
 
-/* 
- * File:   BSTclass.h
- * Author: devesh
- *
- * Created on 13 April, 2016, 7:37 PM
- */
-#ifndef BSTCLASS_H
-#define BSTCLASS_H
+#pragma once
 
 #include "utility.hpp"
 #include "smart_ptr_wrapper.hpp"
+#include <algorithm>
 #include <atomic>
 #include <cstdint>
 #include <climits>
-#include <vector>
 
 template<typename dataType, class compare = std::less<datatype>>
 class bstree
