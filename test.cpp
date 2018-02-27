@@ -285,7 +285,14 @@ if (zwq1) cout << "zwq1 == nullptr" << endl;else cout << "zwq1 not nullptr" << e
 if (zwq1) cout << "zwq1 == void" << endl;else cout << "zwq1 not void" << endl;
 if (zwq2) cout << "zwq2 == nullptr" << endl;else cout << "zwq2 not nullptr" << endl;
 if (zwq2) cout << "zwq2 == void" << endl;else cout << "zwq2 not void" << endl;
-cout << "alignment of: " << alignment_of_v<shared_ptr_wrapper<void>> << endl;
+
+shared_ptr<int> inna = make_shared<int>(88);
+auto innb = shared_ptr<int>(inna.get());
+cout << inna.get() << endl << innb.get() << endl;
+cout << "inna lock free? " << atomic_is_lock_free(&inna) << endl;
+cout << "innb lock free? " << atomic_is_lock_free(&innb) << endl;
+
+const shared_ptr<void> csv;
 
 //cout << "less" << less<shared_ptr<int>>()(make_shared<int>(88)) << endl;
 /*

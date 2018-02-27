@@ -175,30 +175,26 @@ public:
         return *this;
     }
 
-    shared_ptr_wrapper(const T& t):
-        m_sp_ptr(std::make_shared<T>(t))
+    shared_ptr_wrapper(const T* t):
+        m_sp_ptr(t)
     {}
 
-    shared_ptr_wrapper& operator=(const T& t)
+    shared_ptr_wrapper& operator=(const T* t)
     {
-        std::atomic_store(&m_sp_ptr, std::make_shared<T>(t));
+        std::atomic_store(&m_sp_ptr, std::shared_ptr<T>(t));
         return *this;
     }
 
     template<typename U>
-    shared_ptr_wrapper(const U& u)
-    {
-        std::shared_ptr<U> __tmp = std::make_shared<U>(u);
-        m_sp_ptr = std::atomic_load(
-            reinterpret_cast<std::shared_ptr<T>*>(&__tmp));
-    }
+    shared_ptr_wrapper(const U* u):
+        m_sp_ptr(reinterpret_cast<const T*>(u))
+    {}
 
     template<typename U>
     shared_ptr_wrapper& operator=(const U& u)
     {
-        std::shared_ptr<U> __tmp = std::make_shared<U>(u);
         std::atomic_store(&m_sp_ptr,
-            *reinterpret_cast<std::shared_ptr<T>*>(&__tmp));
+            std::shared_ptr<T>(reinterpret_cast<const T*>(u)));
         return *this;
     }
 
@@ -388,19 +384,15 @@ public:
     }
 
     template<typename U>
-    shared_ptr_wrapper(const U& u)
-    {
-        std::shared_ptr<U> __tmp = std::make_shared<U>(u);
-        m_sp_ptr = std::atomic_load(
-            reinterpret_cast<std::shared_ptr<void>*>(&__tmp));
-    }
+    shared_ptr_wrapper(const U* u):
+        m_sp_ptr(reinterpret_cast<const void*>(u))
+    {}
 
     template<typename U>
-    shared_ptr_wrapper& operator=(const U& u)
+    shared_ptr_wrapper& operator=(const U* u)
     {
-        std::shared_ptr<U> __tmp = std::make_shared<U>(u);
         std::atomic_store(&m_sp_ptr,
-            *reinterpret_cast<std::shared_ptr<void>*>(&__tmp));
+            std::shared_ptr<void>(reinterpret_cast<const void*>(u));
         return *this;
     }
 
