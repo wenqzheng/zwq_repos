@@ -303,9 +303,9 @@ public:
             
         if (__lessexp<dataType>()(subtree->data, parent->data))
             parent->node.left.cas_strong(leaf, subtree);
-		else
-		    parent->node.right.cas_strong(leaf, subtree);
-	    __record->parent->node.update.cas_strong(dirty, clean);
+        else
+            parent->node.right.cas_strong(leaf, subtree);
+        __record->parent->node.update.cas_strong(dirty, clean);
     }
 };
 
