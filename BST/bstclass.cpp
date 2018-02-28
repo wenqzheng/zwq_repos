@@ -383,6 +383,7 @@ public:
         shared_ptr_wrapper<insertinfo> __insertrecord = __insertinfo;
         shared_ptr_wrapper<updateflag> __iflag;
         shared_ptr_wrapper<updateflag> __cleanflag;
+        
         do {
             __iflag = std::make_shared<updateflag>(0x100, __insertrecord);
             __cleanflag = std::make_shared<updateflag>(0x1, __insertrecord);
@@ -439,17 +440,40 @@ public:
         shared_ptr_wrapper<updateflag> __dflag;
         shared_ptr_wrapper<updateflag> __cleanflag;
 
-        shared_ptr_wrapper<update> result = ;
+        shared_ptr_wrapper<updateflag> result;
+
+        __deleterecord->parent->update.cas_strong()
 
         do {
             result = std::make_shared<updateflag>(0x1000, __deleterecord);
-        } while 
+        } while (__deleterecord->parent->update, __deleterecord->pupdate, result);
 
         do {
             result = std::make_shared<updateflag>(0x10, __deleterecord);
         } while (__deleterecord->parent->update,
             __deleterecord->pupdate, result);
 
+    }
+
+    void helpmarked(shared_ptr_wrapper<deleteinfo> __deleteinfo)
+    {
+        shared_ptr_wrapper<deleteinfo> __deleterecord = __deleteinfo;
+        shared_ptr_wrapper<entity>* tomarked;
+
+        do {
+            if (__equalexp<dataType>()(__deleterecord->parent->right->data,
+                __deleterecord->leaf->data))
+                tomarked = &(__deleterecord->parent->left);
+            else
+                tomarked = &(__deleterecord->parent->right);
+
+            cas_child(__deleterecord->grandpa, __deleterecord->parent, *other);
+
+            shared_ptr_wrapper<updateflag> __dflag =
+                std::make_shared<updateflag>(0x10, __deleterecord);
+            shared_ptr_wrapper<updateflag> __cleanflag =
+                std::make_shared<updateflag>(0x1, __deleterecord);
+        } while (__deleterecord->grandpa->update.cas_weak(__dflag, __cleanflag);
     }
 
     void help(const shared_ptr_wrapper<updateflag>& update)
