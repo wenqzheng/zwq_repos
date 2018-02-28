@@ -167,20 +167,20 @@ class bstree
     {
     public:
         shared_ptr_wrapper<entity> parent;
-        shared_ptr_wrapper<entity> leaf;
+        shared_ptr_wrapper<entity> self;
         shared_ptr_wrapper<entity> subtree;
 
         relinfo(const relinfo& __record):
             parent(__record.parent),
-            leaf(__record.leaf),
+            self(__record.self),
             subtree(__record.subtree)
         {}
 
         relinfo(const shared_ptr_wrapper<entity>& __parent = nullptr,
-            const shared_ptr_wrapper<entity>& __leaf = nullptr,
+            const shared_ptr_wrapper<entity>& __self = nullptr,
             const shared_ptr_wrapper<entity>& __subtree = nullptr):
             parent(__parent),
-            leaf(__leaf),
+            self(__self),
             subtree(__subtree)
         {}
     };
@@ -297,14 +297,17 @@ public:
         shared_ptr_wrapper<updateflag> clean =
             std::make_shared<updateflag>(false, __record);
 
+        shared_ptr_wrapper<relinfo> __record_imp = __record;
+
         shared_ptr_wrapper<entity> parent = __record->parent;
-        shared_ptr_wrapper<entity> leaf = __record->leaf;
+        shared_ptr_wrapper<entity> self = __record->self;
         shared_ptr_wrapper<entity> subtree = __record->subtree;
-            
+
         if (__lessexp<dataType>()(subtree->data, parent->data))
-            parent->node.left.cas_strong(leaf, subtree);
+            parent->node.left.cas_strong(self, subtree);
         else
-            parent->node.right.cas_strong(leaf, subtree);
+            parent->node.right.cas_strong(self, subtree);
+        
         __record->parent->node.update.cas_strong(dirty, clean);
     }
 };
