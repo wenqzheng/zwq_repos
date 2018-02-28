@@ -230,7 +230,21 @@ cout << *(sp1->SP2) << endl;
 atomic_bool atbl = true;
 cout << atbl << endl;
 
-shared_ptr_wrapper<int>* tochange = nullptr;
-int toa = int();
+int aaa = 88;
+int bbb = 44;
+
+const void* convoid;
+
+shared_ptr<int> sppint(&aaa);// = shared_ptr<int>(&aaa);
+cout << &aaa << endl;
+cout << sppint.get() << endl;
+cout << sppint.use_count() << endl;
+sppint = shared_ptr<int>(&bbb);
+cout << &bbb << endl;
+cout << sppint.get() << endl;
+cout << sppint.use_count() << endl;
+cout << &aaa << endl;
+cout << bbb << endl;
+cout << *sppint << endl;
 return 0;
 }

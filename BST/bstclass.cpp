@@ -434,49 +434,36 @@ public:
         }
     }
 
-    bool helpdelete(shared_ptr_wrapper<deleteinfo>& __deleteinfo)
+    inline bool helpdelete(const shared_ptr_wrapper<deleteinfo>& __deleteinfo)
     {
-        shared_ptr_wrapper<deleteinfo> __deleterecord = __deleteinfo;
-        shared_ptr_wrapper<updateflag> __dflag;
-        shared_ptr_wrapper<updateflag> __cleanflag;
-
-        shared_ptr_wrapper<updateflag> result;
-
-        __deleterecord->parent->update.cas_strong()
-
-        do {
-            result = std::make_shared<updateflag>(0x1000, __deleterecord);
-        } while (__deleterecord->parent->update, __deleterecord->pupdate, result);
-
-        do {
-            result = std::make_shared<updateflag>(0x10, __deleterecord);
-        } while (__deleterecord->parent->update,
-            __deleterecord->pupdate, result);
-
+        if (__deleteinfo->parent->update.cas_strong(__deleteinfo->pupdate,
+            std::make_shared<updateflag>(0x1000, __deleteinfo))) {
+            helpmarked(__deleteinfo);
+            return true;
+        } else {
+            help(__deleteinfo->parent->update;
+            __deleteinfo->grandpa->update.cas_strong(
+                std::make_shared<updateflag>(0x10, __deleteinfo),
+                std::make_shared<updateflag>(0x1, __deleteinfo));
+            return false;
+        }
     }
 
-    void helpmarked(shared_ptr_wrapper<deleteinfo> __deleteinfo)
+    inline void helpmarked(const shared_ptr_wrapper<deleteinfo>& __deleteinfo)
     {
-        shared_ptr_wrapper<deleteinfo> __deleterecord = __deleteinfo;
-        shared_ptr_wrapper<entity>* tomarked;
+        if (__deleteinfo->parent->right->isLeaf())
+            cas_child(__deleteinfo->grandpa, __deleteinfo->parent,
+                __deleteinfo->parent->left);
+        else
+            cas_child(__deleteinfo->grandpa, __deleteinfo->parent,
+                __deleteinfo->parent->right);
 
-        do {
-            if (__equalexp<dataType>()(__deleterecord->parent->right->data,
-                __deleterecord->leaf->data))
-                tomarked = &(__deleterecord->parent->left);
-            else
-                tomarked = &(__deleterecord->parent->right);
-
-            cas_child(__deleterecord->grandpa, __deleterecord->parent, *other);
-
-            shared_ptr_wrapper<updateflag> __dflag =
-                std::make_shared<updateflag>(0x10, __deleterecord);
-            shared_ptr_wrapper<updateflag> __cleanflag =
-                std::make_shared<updateflag>(0x1, __deleterecord);
-        } while (__deleterecord->grandpa->update.cas_weak(__dflag, __cleanflag);
+        __deleteinfo->grandpa->update.cas_strong(
+            std::make_shared<updateflag>(0x10, __deleteinfo),
+            std::make_shared<updateflag>(0x1, __deleteinfo));
     }
 
-    void help(const shared_ptr_wrapper<updateflag>& update)
+    inline void help(const shared_ptr_wrapper<updateflag>& update)
     {
         if (update->isIflag())
             helpinsert(update->info);
@@ -486,25 +473,14 @@ public:
             helpdelete(update->info);
     }
 
-    void cas_child(const shared_ptr_wrapper<entity>& parent,
+    inline void cas_child(const shared_ptr_wrapper<entity>& parent,
         const shared_ptr_wrapper<entity>& oldentity,
         const shared_ptr_wrapper<entity>& newentity)
     {
-        shared_ptr_wrapper<entity> __parent = nullptr;
-        shared_ptr_wrapper<entity> __old = nullptr;
-        shared_ptr_wrapper<entity> __new = nullptr;
-        shared_ptr_wrapper<entity>* tochange = nullptr;
-
-        do {
-            __parent = parent;
-            __old = oldentity;
-            __new = newentity;
-
-            if (__lessexp<dataType>()(__new->data, __parent->data))
-                tochange = &(__parent->left);
-            else
-                tochange = &(__parent->right);
-        } while (!tochange->cas_weak(__old, __new));
+        if (__lessexp<dataType>()(newentity->data, parent->data))
+            parent->left.cas_strong(oldentity, newentity);
+        else
+            parent->right.cas_strong(oldentity, newentity);
     }
 };
 
