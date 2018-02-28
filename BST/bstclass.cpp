@@ -185,7 +185,7 @@ class bstree
         {}
     };
 
-    class searchresult
+    class alignas(__CACHE_LINE_SIZE) searchresult
     {
     public:
         shared_ptr_wrapper<entity> parent;
