@@ -11,6 +11,7 @@
 #include <climits>
 #include <variant>
 #include <iostream>
+#include <typeinfo>
 
 template<typename U>
 struct Inf0
@@ -122,7 +123,8 @@ class bstree
         treenode(std::atomic_bool __isLeaf = true,
             const shared_ptr_wrapper<entity>& __left = nullptr,
             const shared_ptr_wrapper<entity>& __right = nullptr,
-            const shared_ptr_wrapper<updateflag>& __update = nullptr):
+            const shared_ptr_wrapper<updateflag>& __update =
+                std::make_shared<updateflag>()):
             isLeaf(__isLeaf.load()),
             left(__left),
             right(__right),
@@ -198,7 +200,8 @@ class bstree
 
         searchresult(const shared_ptr_wrapper<entity>& __parent = nullptr,
             const shared_ptr_wrapper<entity>& __self = nullptr,
-            const shared_ptr_wrapper<updateflag>& __pupdate = NULL):
+            const shared_ptr_wrapper<updateflag>& __pupdate =
+                std::make_shared<updateflag>()):
             parent(__parent),
             self(__self),
             pupdate(__pupdate)
@@ -220,7 +223,6 @@ public:
 
     shared_ptr_wrapper<searchresult> lookup(const dataType& __data)
     {
-        __VAR __data_imp = __data;
         shared_ptr_wrapper<entity> parent;
         shared_ptr_wrapper<entity> self;
         shared_ptr_wrapper<updateflag> pupdate;
@@ -230,7 +232,7 @@ public:
             parent = self;
             pupdate = self->node.update;
 
-            if (__lessexp<dataType>()(__data_imp, self->data))
+            if (__lessexp<dataType>()(__data, self->data))
                 self = parent->node.left;
             else
                 self = parent->node.right;
@@ -247,16 +249,15 @@ public:
         shared_ptr_wrapper<entity> newentity;
         shared_ptr_wrapper<entity> newinternal;
 
+        newentity = std::make_shared<entity>(__data, treenode(true));
         shared_ptr_wrapper<relinfo> record;
 
-        newentity = std::make_shared<entity>(__data, treenode(true));
-
-        while (true) {
+        while (true) {        
             shared_ptr_wrapper<searchresult> search = lookup(__data);
             parent = search->parent;
             self = search->self;
             shared_ptr_wrapper<updateflag> pupdate = search->pupdate;
-
+        
             if (__equalexp<dataType>()(self->data, __data))
                 return false;
             if (pupdate->isDirty)
@@ -266,13 +267,14 @@ public:
                 if (__lessexp<dataType>()(newentity->data, sibling->data))
                     newinternal = std::make_shared<entity>(
                         std::max(__VAR(__data), self->data,
-			    __lessexp<dataType>()),
+                            __lessexp<dataType>()),
                         treenode(false, newentity, sibling));
                 else
                     newinternal = std::make_shared<entity>(
                         std::max(__VAR(__data), self->data,
-			    __lessexp<dataType>()),
+                            __lessexp<dataType>()),
                         treenode(false, sibling, newentity));
+                
                 record = std::make_shared<relinfo>(parent, self, newinternal);
 
                 shared_ptr_wrapper<updateflag> dirty =
@@ -284,6 +286,7 @@ public:
                 } else
                     helpinsert(pupdate->info);
             }
+            return true;
         }
     }
 
@@ -294,19 +297,15 @@ public:
         shared_ptr_wrapper<updateflag> clean =
             std::make_shared<updateflag>(false, __record);
 
-        do {
-            shared_ptr_wrapper<entity> parent = __record->parent;
-            shared_ptr_wrapper<entity> leaf = __record->leaf;
-            shared_ptr_wrapper<entity> subtree = __record->subtree;
-	    shared_ptr_wrapper<entity>* tochange;
+        shared_ptr_wrapper<entity> parent = __record->parent;
+        shared_ptr_wrapper<entity> leaf = __record->leaf;
+        shared_ptr_wrapper<entity> subtree = __record->subtree;
             
-	    do {
-                if (__lessexp<dataType>()(subtree->data, parent->data))
-                    tochange = &(parent->node.left);
+        if (__lessexp<dataType>()(subtree->data, parent->data))
+            parent->node.left.cas_strong(leaf, subtree);
 		else
-		    tochange = &(parent->node.right);
-	    } while (!tochange->cas_weak(leaf, subtree));
-	} while (!__record->parent->node.update.cas_weak(dirty, clean));
+		    parent->node.right.cas_strong(leaf, subtree);
+	    __record->parent->node.update.cas_strong(dirty, clean);
     }
 };
 
@@ -314,11 +313,13 @@ int main()
 {
     bstree<int> bst;
     bst.insert(4);
-//    bst.insert(8);
-//    bst.insert(1);
-//    bst.insert(2);
-//    bst.insert(7);
+    bst.insert(8);
+    bst.insert(1);
+    bst.insert(2);
+    bst.insert(7);
     std::cout << __equalexp<int>()(8,8) << std::endl;
-//    std::cout << bst.insert(8) << std::endl;
+    std::cout << typeid(std::atomic_bool).name() << std::endl;
+    std::cout << bst.insert(9) << std::endl;
+    std::cout << *reinterpret_cast<int*>(&(bst.lookup(-16)->self->data)) << std::endl;
     return 0;
 }

@@ -222,8 +222,13 @@ string s = "OK";
 variant<int,string> b = variant<int, string>(s);
 cout << b.index() << endl;
 
-auto sp1 = make_shared<SP1>();
-sp1->SP2 = make_shared<int>(88);
+shared_ptr_wrapper<SP1> sp1 = make_shared<SP1>();
+sp1->SP2.store(shared_ptr_wrapper<int>(make_shared<int>(88)));
+cout << *(sp1->SP2) << endl;
+sp1->SP2.store(shared_ptr_wrapper<int>(make_shared<int>(128)));
+cout << *(sp1->SP2) << endl;
+atomic_bool atbl = true;
+cout << atbl << endl;
 
 return 0;
 }
