@@ -230,5 +230,7 @@ cout << *(sp1->SP2) << endl;
 atomic_bool atbl = true;
 cout << atbl << endl;
 
+shared_ptr_wrapper<int>* tochange = nullptr;
+int toa = int();
 return 0;
 }
