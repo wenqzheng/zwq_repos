@@ -121,7 +121,7 @@ public:
 
     template<typename U>
     shared_ptr_wrapper(const shared_ptr_wrapper<U>& sp):
-        m_sp_ptr(*reinterpret_cast<const std::shared_ptr<T>*>(&sp))
+        m_sp_ptr(*reinterpret_cast<const std::shared_ptr<T>*>(&(sp.m_sp_ptr)))
     {}
 
     template<typename U>
