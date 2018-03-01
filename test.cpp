@@ -230,5 +230,10 @@ cout << *(sp1->SP2) << endl;
 atomic_bool atbl = true;
 cout << atbl << endl;
 
+std::atomic_uint64_t aut = 0x1;
+
+bool bux = aut & 0x1;
+cout << bux << endl;
+
 return 0;
 }
