@@ -44,8 +44,8 @@ inline constexpr unsigned long __power2(const unsigned long& size)
     if (0 == size)
         return 0;
     else {
-        for (auto i = 0; i < 63; ++i)
-            if (!(size >> (i + 1)))
+        for (std::size_t i = 1; i < 64; ++i)
+            if (!((size - 1) >> i))
                 return (1 << i);
     }
 
