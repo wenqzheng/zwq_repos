@@ -22,7 +22,7 @@ class weak_ptr_wrapper;
 template<typename U>
 struct std::hash<shared_ptr_wrapper<U>>
 {
-    auto operator()(const shared_ptr_wrapper<U>& sp_U)
+    std::size_t operator()(const shared_ptr_wrapper<U>& sp_U)
     {
         return std::hash<std::shared_ptr<U>>()(sp_U.m_sp_ptr);
     }
@@ -74,7 +74,7 @@ struct std::greater_equal<shared_ptr_wrapper<U>>
 
 
 template<typename T>
-class shared_ptr_wrapper
+class alignas(sizeof(std::shared_ptr<void>)) shared_ptr_wrapper
 {
 private:
     std::shared_ptr<T> m_sp_ptr;
@@ -321,7 +321,7 @@ public:
 
 
 template<>
-class shared_ptr_wrapper<void>
+class alignas(sizeof(std::shared_ptr<void>)) shared_ptr_wrapper<void>
 {
 private:
     std::shared_ptr<void> m_sp_ptr;
@@ -448,7 +448,7 @@ public:
     shared_ptr_wrapper& operator=(const U* u)
     {
         m_sp_ptr = std::move(
-	    std::shared_ptr<void>(reinterpret_cast<const void*>(u)));
+	        std::shared_ptr<void>(reinterpret_cast<const void*>(u)));
         return *this;
     }
 
@@ -456,7 +456,7 @@ public:
     shared_ptr_wrapper& operator=(U* u)
     {
         m_sp_ptr = std::move(
-	    std::shared_ptr<void>(reinterpret_cast<void*>(u)));
+	        std::shared_ptr<void>(reinterpret_cast<void*>(u)));
         return *this;
     }
 
@@ -591,7 +591,7 @@ struct std::greater_equal<weak_ptr_wrapper<U>>
 
 
 template<typename T>
-class weak_ptr_wrapper
+class alignas(sizeof(std::weak_ptr<void>)) weak_ptr_wrapper
 {
 private:
     std::weak_ptr<T> m_wp_ptr;

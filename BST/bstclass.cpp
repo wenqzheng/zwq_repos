@@ -14,70 +14,129 @@
 #include <iostream>
 #include <typeinfo>
 
-template<typename U>
-struct Inf0
-{
-    U index;
-};
-
-template<typename U>
-struct Inf1
-{
-    U index;
-};
-
-template<typename U>
-struct __lessexp
-{
-    using __VAR = std::variant<U, Inf0<U>, Inf1<U>>;
-    constexpr bool operator()(const __VAR& __v1, const __VAR& __v2) const
-    {
-        if (__v1.index() != __v2.index())
-            return std::less<std::size_t>()(__v1.index(), __v2.index());
-        else if (0 == __v1.index())
-            return std::less<U>()(*reinterpret_cast<const U*>(&__v1),
-                *reinterpret_cast<const U*>(&__v2));
-        else
-            return false;
-    }
-};
-
-template<typename U>
-struct __equalexp
-{
-    using __VAR = std::variant<U, Inf0<U>, Inf1<U>>;
-    constexpr bool operator()(const __VAR& __v1, const __VAR& __v2) const
-    {
-        if (__v1.index() != __v2.index())
-            return false;
-        else if (0 == __v1.index())
-            return !std::not_equal_to<U>()(*reinterpret_cast<const U*>(&__v1),
-                *reinterpret_cast<const U*>(&__v2));
-        else
-            return true;
-    }
-};
-
-template<typename U>
-struct __greaterexp
-{
-    using __VAR = std::variant<U, Inf0<U>, Inf1<U>>;
-    constexpr bool operator()(const __VAR& __v1, const __VAR& __v2) const
-    {
-        if (__v1.index() != __v2.index())
-            return std::greater<std::size_t>()(__v1.index(), __v2.index());
-        else if (0 == __v1.index())
-            return std::greater<U>()(*reinterpret_cast<const U*>(&__v1),
-                *reinterpret_cast<const U*>(&__v2));
-        else
-            return false;
-    }
-};
 
 template<typename dataType>
 class bstree
 {
-    using __VAR = std::variant<dataType, Inf0<dataType>, Inf1<dataType>>;
+    struct Inf0
+    {
+    private:
+        dataType index;
+    };
+
+    struct Inf1
+    {
+    private:
+        dataType index;
+    };
+
+    struct __data_wrapper
+    {
+    private:
+        using __VAR = std::variant<dataType, Inf0, Inf1>;
+    
+        struct __lessexp
+        {
+            inline constexpr
+            bool operator()(const __VAR& __v1, const __VAR& __v2) const noexcept
+            {
+                if (__v1.index() != __v2.index())
+                    return __v1.index() < __v2.index();
+                else if (0 == __v1.index())
+                    return std::less<dataType>()(
+                        *reinterpret_cast<const U*>(&__v1),
+                        *reinterpret_cast<const dataType*>(&__v2));
+            else
+                return false;
+        }
+    };
+    
+    struct __equalexp
+    {
+        inline constexpr
+        bool operator()(const __VAR& __v1, const __VAR& __v2) const noexcept
+        {
+            if (__v1.index() != __v2.index())
+                return false;
+            else if (0 == __v1.index())
+                return !std::not_equal_to<dataType>()(
+                    *reinterpret_cast<const dataType*>(&__v1),
+                    *reinterpret_cast<const dataType*>(&__v2));
+            else
+                return true;
+        }
+    };
+
+    struct __greaterexp
+    {
+        inline constexpr
+        bool operator()(const __VAR& __v1, const __VAR& __v2) const noexcept
+        {
+            if (__v1.index() != __v2.index())
+                return __v1.index() > __v2.index();
+            else if (0 == __v1.index())
+                return std::greater<dataType>()(
+                    *reinterpret_cast<const dataType*>(&__v1),
+                    *reinterpret_cast<const dataType*>(&__v2));
+            else
+                return false;
+        }
+    };
+
+    __VAR data;
+
+public:
+    data_wrapper(const data_wrapper& __data):
+        data(__data)
+    {}
+
+    data_wrapper(const __VAR& __var = __VAR()):
+        data(__var)
+    {}
+
+    data_wrapper(const dataType& __data):
+        data(__VAR(__data))
+    {}
+
+    data_wrapper(const Inf0<dataType>& __inf0):
+        data(__VAR(__inf0))
+    {}
+
+    data_wrapper(const Inf1<dataType>& __inf1):
+        data(__VAR(__inf1))
+    {}
+
+    inline bool operator<(const data_wrapper& __data) const noexcept
+    {
+        return __lessexp()(data, __data);
+    }
+
+    inline bool operator==(const data_wrapper& __data) const noexcept
+    {
+        return __equalexp()(data, __data);
+    }
+
+    inline bool operator>(const data_wrapper& __data) const noexcept
+    {
+        return __greater()(data, __data);
+    }
+
+    inline bool operator>=(const data_wrapper& __data) const noexcept
+    {
+        return __lessexp()(__data, data);
+    }
+
+    inline bool operator<=(const data_wrapper& __data) const noexcept
+    {
+        return __greaterexp()(__data, data);
+    }
+
+    inline dataType operator()() const noexcept
+    {
+        return *reinterpret_cast<dataType*>(&data);
+    }
+};
+
     class entityinfo;
     class entity;
 
@@ -120,17 +179,18 @@ class bstree
 	}
     };
 
-    class leafnode:entity
+    class leafnode
     {
     public:
-	__VAR data;
+	    data_wrapper<dataType> data;
 
         leafnode(const leafnode& __leaf):
             data(__leaf.data)
         {}
 
-        leafnode(const __VAR& __var = __VAR()):
-            data(__var)
+        leafnode(const data_wrapper<dataType>& __data =
+            data_wrapper<dataType>()):
+            data(__data)
         {}
 
         leafnode(const dataType& __data):
@@ -456,9 +516,9 @@ public:
             helpdelete(__uprecord->info);
     }
 
-    inline void cas_child(shared_ptr_wrapper<internalnode> parent,
-        shared_ptr_wrapper<entity> oldentity,
-        shared_ptr_wrapper<entity> newentity)
+    inline void cas_child(shared_ptr_wrapper<internalnode>& parent,
+        shared_ptr_wrapper<entity>& oldentity,
+        shared_ptr_wrapper<entity>& newentity)
     {
         shared_ptr_wrapper<internalnode> __pa = parent.load();
         shared_ptr_wrapper<leafnode> __old = oldentity.load();
