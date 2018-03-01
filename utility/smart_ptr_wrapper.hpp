@@ -842,9 +842,8 @@ public:
 
     weak_ptr_wrapper load(std::memory_order order = std::memory_order_seq_cst)
     {
-        std::shared_ptr<T> __tmp_ptr = std::atomic_load(
+        return std::atomic_load(
             reinterpret_cast<std::shared_ptr<T>*>(&m_wp_ptr));
-        return *reinterpret_cast<std::weak_ptr<T>*>(__tmp_ptr);
     }
 
     template<typename U>
@@ -860,10 +859,9 @@ public:
     weak_ptr_wrapper exchange(weak_ptr_wrapper<U> wp_W,
         std::memory_order order = std::memory_order_seq_cst)
     {
-        std::shared_ptr<T> __tmp_ptr = std::atomic_exchange(
+        return std::atomic_exchange(
             reinterpret_cast<std::shared_ptr<T>*>(&m_wp_ptr),
             *reinterpret_cast<std::shared_ptr<T>*>(&(wp_W.m_wp_ptr)));
-        return *reinterpret_cast<std::weak_ptr<T>*>(&__tmp_ptr);
     }
 
     template<typename U1, typename U2>
