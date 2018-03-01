@@ -84,59 +84,31 @@ class bstree
     class updateflag
     {
     public:
-        std::atomic_uint64_t state;
+        std::atomic_bool cflag;
+        std::atomic_bool iflag;
+        std::atomic_bool dflag;
+        std::atomic_bool mflag;
         shared_ptr_wrapper<entityinfo> info;
 
         updateflag(const updateflag& __record):
-            state(__record.state.load()),
+            cflag(__record.cflag.load()),
+            iflag(__record.iflag.load()),
+            dflag(__record.dflag.load()),
+            mflag(__record.mflag.load()),
             info(__record.info)
         {}
 
-        updateflag(std::atomic_uint64_t __state = 0x1,
+        updateflag(std::atomic_bool __cflag = true,
+            std::atomic_bool __iflag = false,
+            std::atomic_bool __dflag = false,
+            std::atomic_bool __mflag = false,
             const shared_ptr_wrapper<entityinfo>& __info = nullptr):
-            state(__state.load()),
+            cflag(__cflag.load()),
+            iflag(__iflag.load()),
+            dflag(__dflag.load()),
+            mflag(__mflag.load()),
             info(__info)
         {}
-
-        void setClean()
-        {
-            state.store(0x1);
-        }
-
-        bool isClean()
-        {
-            return (state.load() & 0x1);
-        }
-
-        void setDflag()
-        {
-            state.store(0x10);
-        }
-
-        bool isDflag()
-        {
-            return (state.load() & 0x10);
-        }
-
-        void setIflag()
-        {
-            state.store(0x100);
-        }
-
-        bool isIflag()
-        {
-            return (state.load() & 0x100);
-        }
-
-        void setMark()
-        {
-            state.store(0x1000);
-        }
-
-        bool isMark()
-        {
-            return (state.load() & 0x1000);
-        }
     };
 
     class entity
@@ -182,7 +154,7 @@ class bstree
     class internalnode:entity
     {
     public:
-	__VAR data;
+	    __VAR data;
         shared_ptr_wrapper<entity> left;
         shared_ptr_wrapper<entity> right;
         shared_ptr_wrapper<updateflag> update;
@@ -299,18 +271,17 @@ public:
             std::make_shared<leafnode>(Inf0<dataType>());
         shared_ptr_wrapper<leafnode> rright =
             std::make_shared<leafnode>(Inf1<dataType>());
-        root = std::make_shared<internalnode>(Inf1<dataType>(),  rleft, rright);
+        root = std::make_shared<internalnode>(Inf1<dataType>(), rleft, rright);
     }
 
     shared_ptr_wrapper<searchresult> search(const dataType& __data)
     {
-        shared_ptr_wrapper<internalnode> grandpa;
-        shared_ptr_wrapper<internalnode> parent;
-        shared_ptr_wrapper<leafnode> leaf;
-        shared_ptr_wrapper<updateflag> pupdate;
-        shared_ptr_wrapper<updateflag> gpupdate;
+        shared_ptr_wrapper<internalnode> grandpa = nullptr;
+        shared_ptr_wrapper<internalnode> parent = nullptr;
+        shared_ptr_wrapper<leafnode> leaf = root;
+        shared_ptr_wrapper<updateflag> pupdate = nullptr;
+        shared_ptr_wrapper<updateflag> gpupdate = nullptr;
 
-        leaf = root;
         do {
             grandpa = parent;
             parent = leaf;
@@ -340,14 +311,12 @@ public:
     {
         shared_ptr_wrapper<internalnode> parent;
         shared_ptr_wrapper<internalnode> newinternal;
-
         shared_ptr_wrapper<leafnode> leaf;
         shared_ptr_wrapper<leafnode> newsibling;
-
-        shared_ptr_wrapper<insertinfo> __iinfo;
-        
         shared_ptr_wrapper<updateflag> pupdate;
 
+        shared_ptr_wrapper<insertinfo> __iinfo;
+		shared_ptr_wrapper<updateflag> __iflag;
         shared_ptr_wrapper<leafnode> newleaf =
             std::make_shared<leafnode>(__data);
 
@@ -360,32 +329,28 @@ public:
 
             if (__equalexp<dataType>()(leaf->data, __data))
                 return false;
-            if (!pupdate->isClean())
-                help(pupdate.load());
+            if (!pupdate->cflag)
+                help(pupdate);
             else {
                 newsibling = std::make_shared<leafnode>(leaf->data);
                 if (__lessexp<dataType>()(newleaf->data, newsibling->data))
                     newinternal = std::make_shared<internalnode>(
-                        std::max(__VAR(__data), leaf->data,
-                            __lessexp<dataType>()),
-                        newleaf, newsibling);
+                        leaf->data, newleaf, newsibling);
                 else
                     newinternal = std::make_shared<internalnode>(
-                        std::max(__VAR(__data), leaf->data,
-                            __lessexp<dataType>()),
-                        newsibling, newleaf);
+                        __data, newsibling, newleaf);
 
                 __iinfo =
                     std::make_shared<insertinfo>(parent, leaf, newinternal);
 
-		shared_ptr_wrapper<updateflag> __iflag =
-                        std::make_shared<updateflag>(0x100, __iinfo);
- 
+		        __iflag = std::make_shared<updateflag>(
+                    false, true, false, false, __iinfo);
+                
                 if (parent->update.cas_strong(pupdate, __iflag)) {
-                    helpinsert(__iinfo.load());
+                    helpinsert(__iinfo);
                     return true;
                 } else
-                    help(parent->update.load());
+                    help(pupdate);
             }
         }
     }
@@ -395,10 +360,10 @@ public:
         shared_ptr_wrapper<internalnode> grandpa;
         shared_ptr_wrapper<internalnode> parent;
         shared_ptr_wrapper<leafnode> leaf;
-
         shared_ptr_wrapper<updateflag> pupdate;
         shared_ptr_wrapper<updateflag> gpupdate;
 
+		shared_ptr_wrapper<updateflag> __dflag;
         shared_ptr_wrapper<deleteinfo> __dinfo;
 
         while (true) {
@@ -411,107 +376,124 @@ public:
 
             if (!__equalexp<dataType>()(leaf->data, __data))
                 return false;
-            if (!gpupdate->isClean())
-                return help(gpupdate.load());
-            else if (!pupdate->isClean())
-                return help(pupdate.load());
+            if (!gpupdate->cflag)
+                help(gpupdate);
+            else if (!pupdate->cflag)
+                help(pupdate);
             else {
                 __dinfo = std::make_shared<deleteinfo>(
                     grandpa, parent, leaf, pupdate);
 
-		shared_ptr_wrapper<updateflag> __dflag =
-		    std::make_shared<updateflag>(0x10, __dinfo);
+		        __dflag = std::make_shared<updateflag>(
+                    false, false, true, false, __dinfo);
 
                 if (grandpa->update.cas_strong(gpupdate, __dflag)) {
-                    if (helpdelete(__dinfo.load()))
+                    if (helpdelete(__dinfo))
                         return true;
                 } else
-                    help(grandpa->update.load());
+                    help(gpupdate);
             }
         }
     }
 
     void helpinsert(shared_ptr_wrapper<insertinfo> __iinfo)
     {
-        cas_child(__iinfo->parent, __iinfo->leaf, __iinfo->newinternal);
-	shared_ptr_wrapper<updateflag> __iflag =
-	    std::make_shared<updateflag>(0x100, __iinfo);
-	shared_ptr_wrapper<updateflag> __cflag =
-	    std::make_shared<updateflag>(0x1, __iinfo);
-        __iinfo->parent->update.cas_strong(__iflag, __cflag);
+        shared_ptr_wrapper<insertinfo> __irecord = __iinfo.load();
+        cas_child(__irecord->parent, __irecord->leaf, __irecord->newinternal);
+	    shared_ptr_wrapper<updateflag> __iflag =
+	        std::make_shared<updateflag>(false, true, false, false, __irecord);
+	    shared_ptr_wrapper<updateflag> __cflag =
+	        std::make_shared<updateflag>(true, false,false, false, __irecord);
+        while (!__irecord->parent->update.cas_weak(__iflag, __cflag));
     }
 
     inline bool helpdelete(shared_ptr_wrapper<deleteinfo> __dinfo)
     {
+        shared_ptr_wrapper<deleteinfo> __drecord = __dinfo.load();
         shared_ptr_wrapper<updateflag> __mflag =
-	    std::make_shared<updateflag>(0x1000, __dinfo);
-	shared_ptr_wrapper<updateflag> __dflag =
-	    std::make_shared<updateflag>(0x10, __dinfo);
+	        std::make_shared<updateflag>(false, false, false, true, __drecord);
+	    shared_ptr_wrapper<updateflag> __dflag =
+	        std::make_shared<updateflag>(false, false, true, false, __drecord);
         shared_ptr_wrapper<updateflag> __cflag =
-	    std::make_shared<updateflag>(0x1, __dinfo);
+	        std::make_shared<updateflag>(true, false, false, false, __drecord);
 
-        if (__dinfo->parent->update.cas_strong(__dinfo->pupdate, __mflag)) {
-            helpmarked(__dinfo);
+        if (__drecord->parent->update.cas_strong(__drecord->pupdate, __mflag)) {
+            helpmarked(__drecord);
             return true;
         } else {
-            help(__dinfo->parent->update);
-            __dinfo->grandpa->update.cas_strong(__dflag, __cflag);
+            help(__drecord->pupdate);
+            while (!__drecord->grandpa->update.cas_weak(__dflag, __cflag));
             return false;
         }
     }
 
     inline void helpmarked(shared_ptr_wrapper<deleteinfo> __dinfo)
     {
+        shared_ptr_wrapper<deleteinfo> __drecord = __dinfo.load();
         shared_ptr_wrapper<updateflag> __dflag =
-            std::make_shared<updateflag>(0x10, __dinfo);
+            std::make_shared<updateflag>(false, false, true, false, __drecord);
         shared_ptr_wrapper<updateflag> __cflag =
-            std::make_shared<updateflag>(0x1, __dinfo);
+            std::make_shared<updateflag>(true, false, false, false, __drecord);
 
-        if (__dinfo->parent->right->isLeaf())
-            cas_child(__dinfo->grandpa, __dinfo->parent,
-                __dinfo->parent->left);
+        if (__drecord->parent->right->isLeaf())
+            cas_child(__drecord->grandpa, __drecord->parent,
+                __drecord->parent->left);
         else
-            cas_child(__dinfo->grandpa, __dinfo->parent,
-                __dinfo->parent->right);
+            cas_child(__drecord->grandpa, __drecord->parent,
+                __drecord->parent->right);
 
-        __dinfo->grandpa->update.cas_strong(__dflag, __cflag);
+        __drecord->grandpa->update.cas_strong(__dflag, __cflag);
     }
 
     inline void help(shared_ptr_wrapper<updateflag> update)
     {
-        if (update->isIflag())
-            helpinsert(update->info);
-        else if (update->isMark())
-            helpmarked(update->info);
-        else if (update->isDflag())
-            helpdelete(update->info);
+        shared_ptr_wrapper<updateflag> __uprecord = update.load();
+        if (__uprecord->iflag)
+            helpinsert(__uprecord->info);
+        else if (__uprecord->mflag)
+            helpmarked(__uprecord->info);
+        else if (__uprecord->dflag)
+            helpdelete(__uprecord->info);
     }
 
     inline void cas_child(shared_ptr_wrapper<internalnode> parent,
         shared_ptr_wrapper<entity> oldentity,
         shared_ptr_wrapper<entity> newentity)
     {
-        if (__lessexp<dataType>()(
-	    (*reinterpret_cast<shared_ptr_wrapper<leafnode>*>(&newentity))->data,
-	    parent->data))
-            parent->left.cas_strong(oldentity, newentity);
+        shared_ptr_wrapper<internalnode> __pa = parent.load();
+        shared_ptr_wrapper<leafnode> __old = oldentity.load();
+        shared_ptr_wrapper<internalnode> __new = newentity.load();
+        if (__lessexp<dataType>()(__new->data, __pa->data))
+            __pa->left.cas_strong(__old, __new);
         else
-            parent->right.cas_strong(oldentity, newentity);
+            __pa->right.cas_strong(__old, __new);
     }
 };
 
 int main()
 {
     bstree<int> bst;
-    bst.insert(4);
-    bst.insert(8);
-    bst.insert(1);
-    bst.insert(2);
-    bst.insert(7);
-    std::cout << __equalexp<int>()(8,8) << std::endl;
-    std::cout << typeid(std::atomic_bool).name() << std::endl;
-    std::cout << bst.insert(9) << std::endl;
-    std::cout << bst.insert(7) << std::endl;
-    std::cout << *reinterpret_cast<int*>(&(bst.search(6)->leaf->data)) << std::endl;
+    std::cout << bst.insert(4) << std::endl;
+    std::cout << bst.insert(8) << std::endl;
+//    bst.remove(4);
+
+    std::cout << bst.insert(1) << std::endl;
+    std::cout << bst.insert(2) << std::endl;
+//    bst.insert(7);
+    if (!bst.search(7)->pupdate->cflag)
+        std::cout << "not clean" << std::endl;
+    else
+        std::cout << "clean" << std::endl;
+    std::cout << bst.search(7)->pupdate->iflag << std::endl;
+bst.insert(7);
+bst.insert(9);
+bst.remove(9);
+std::cout << bst.insert(9) << std::endl;
+std::cout << bst.insert(89) << std::endl;
+//    std::cout << __equalexp<int>()(8,8) << std::endl;
+//    std::cout << typeid(std::atomic_bool).name() << std::endl;
+//    std::cout << bst.insert(9) << std::endl;
+//    std::cout << bst.insert(7) << std::endl;
+//    std::cout << *reinterpret_cast<int*>(&(bst.search(6)->leaf->data)) << std::endl;
     return 0;
 }
