@@ -14,6 +14,51 @@
 #include <iostream>
 #include <typeinfo>
 
+template<class dataType>
+class Inf
+{
+    dataType __data;
+    
+    template<typename>
+    friend std::less;
+public:
+    Inf(const Inf& __inf):
+        __data(__inf.data)
+    {}
+
+    Inf(Inf&& __inf):
+        __data(std::move(__inf))
+    {}
+
+    Inf(const dataType& __dat = dataType()):
+        __data(__dat)
+    {}
+
+    Inf(dataType&& __dat):
+        __data(__dat)
+    {}
+
+    inline bool isInf() const noexcept
+    {
+        return true;
+    }
+};
+
+template<typename dataType>
+struct std::less<Inf<dataType>>
+{
+    inline bool operator()(const Inf<dataType>& __inf1,
+        const Inf<dataType>& __inf2) const
+    {
+        return std::less<dataType>()(__inf1.__data, __inf2.__data);
+    }
+
+    inline bool operator()(const dataType&, const Inf<dataType>&)
+    {
+        return true;
+    }
+}
+
 
 template<typename dataType>
 class bstree

@@ -52,3 +52,5 @@ inline constexpr unsigned long __power2(const unsigned long& size)
 
     return 0;
 }
+
+#define __access_once(x) (*(volatile decltype(x) *)&(x))

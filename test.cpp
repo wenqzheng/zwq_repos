@@ -89,20 +89,143 @@ struct __type1
 }
 
 
-
 auto lmd = [](auto&& t) {
     return __type<decltype(t)>();
 };
 */
 
+class treenode
+{
+struct nodeconcept
+{
+    virtual ~nodeconcept() {}
+    virtual bool isLeaf() const = 0;
+};
+
+template<typename T>
+struct nodemodel:nodeconcept
+{
+    nodemodel(const T& t):
+        node(t)
+    {}
+
+    virtual ~nodemodel() {}
+
+    virtual bool isLeaf() const
+    {
+        return node.isLeaf();
+    }
+
+private:
+    T node;
+};
+
+shared_ptr_wrapper<nodeconcept> __node;
+
+public:
+    treenode():
+        __node(nullptr)
+    {}
+
+    template<typename T>
+    treenode(const T& node):
+        __node(make_shared<nodemodel<T>>(node))
+    {}
+
+    template<typename T>
+    treenode& operator=(const T& node)
+    {
+        __node = make_shared<nodemodel<T>>(node);
+        return *this;
+    }
+
+    inline bool isLeaf() const
+    {
+        return __node->isLeaf();
+    }
+
+};
+
+
+
+struct AA
+{
+bool isLeaf() const
+{
+    return true;
+}
+};
+
+struct BB
+{
+    AA aa;
+bool isLeaf() const
+{
+    return false;
+}
+};
+/*
+template<typename T>
+struct std::less<T>
+{
+    bool operator()(const T&, const AA&)
+    {
+        return true;
+    }
+};
+*/
+#define __HASH_TYPE(type) __hash_for_typeid(#type)
+
+#define __str(type) #type
+
+template<typename T>
+struct __Info2Type
+{
+    using type = T;
+    const size_t __idx;
+
+    constexpr __Info2Type():
+        __idx(__)
+    {}
+
+    __Info2Type(const __Info2Type& __info):
+        __idx(__info.__idx)
+    {}
+
+};
+
+template<typename T>
+__Info2Type<T> __getType(const __Info2Type<T>& __info)
+{
+    return __Info2Type<T>();
+}
+/*
+struct __object
+{
+    template<typename T>
+    T operator()(const T& __t)
+    {
+    
+    }
+}
+*/
+#define __str2type(t) ( Type2Str<decltype(t)>(typeid(decltype(t)).hash_code()) )
 
 
 int main()
 {
-  //  cout << typeid(decltype(lmd)).name() << endl;
-  //  cout << sizeof(lmd) << endl;
-  //  cout << __type<int>().__typeid << endl;
-    std::array<int,hash<string_view>()("zwq")> arr;    
+    cout << sizeof(__Info2Type<int>) << endl;
+    treenode node;
+    int bb = 88;
+    auto aa = __access_once(bb);
+    type_index __idx = typeid(int);
+    cout << (*reinterpret_cast<type_info**>(&__idx))->name() << endl;
 
+    if (typeid(int) == typeid(bool)) cout << "OK" << endl; else cout << "NOT OK" << endl;
+const char* ppp;
+    cout << typeid(decltype(ppp)).name() << endl;
+//    Type2Str<int> cc(88);
+  //  decltype(__str2type(AA()))::Type cc;
+    //cout << typeid(decltype(cc)).name() << endl;
+   // cout << std::less<int>()(88, AA()) << endl;
 }
-
