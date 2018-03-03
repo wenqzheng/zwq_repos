@@ -20,6 +20,7 @@
 #include <variant>
 #include <typeindex>
 #include <string_view>
+#include <sys/smp.h>
 using namespace std;
 /*
 class __object
@@ -146,24 +147,29 @@ public:
 
 };
 
-
+template<typename T>
+constexpr size_t Type2Num();
 
 struct AA
 {
-bool isLeaf() const
+virtual bool isLeaf() const
 {
     return true;
 }
 };
 
-struct BB
+struct BB:AA
 {
-    AA aa;
+    const int b;
+    BB():
+        b(88)
+    {}
 bool isLeaf() const
 {
     return false;
 }
 };
+
 /*
 template<typename T>
 struct std::less<T>
@@ -177,7 +183,7 @@ struct std::less<T>
 #define __HASH_TYPE(type) __hash_for_typeid(#type)
 
 #define __str(type) #type
-
+/*
 template<typename T>
 struct __Info2Type
 {
@@ -185,7 +191,7 @@ struct __Info2Type
     const size_t __idx;
 
     constexpr __Info2Type():
-        __idx(__)
+        __idx(static_cast<size_t>(&typeid(T)))
     {}
 
     __Info2Type(const __Info2Type& __info):
@@ -193,12 +199,20 @@ struct __Info2Type
     {}
 
 };
+*/
+template<size_t __id>
+struct type_id
+{};
+
+
+#define type_id(...) TYPEID<typeid(__VA_ARGS__)>
 
 template<typename T>
-__Info2Type<T> __getType(const __Info2Type<T>& __info)
-{
-    return __Info2Type<T>();
-}
+struct TID
+{};
+//template<typename T>
+//struct TID<TYPEID<typeid(T)>>
+//{};
 /*
 struct __object
 {
@@ -209,12 +223,70 @@ struct __object
     }
 }
 */
-#define __str2type(t) ( Type2Str<decltype(t)>(typeid(decltype(t)).hash_code()) )
+template<typename type>
+constexpr size_t Type2Num()
+{
+    return reinterpret_cast<const size_t>(&typeid(type))/16;
+};
+
+template<typename T, class func>
+struct T2N
+{
+//    using type = T;
+//    const size_t __index = Type2Num<T>();
+};
+
+template<typename T, class func = Type2Num<T>>
+struct T2N
+{
+    using type = T;
+}
+/*
+template<typename T>
+struct T2N
+{
+    using type = T;
+    const size_t __index = Type2Num<T>();
+};
+*/
+
+
+#define Type2Num(type)\
+({  \
+    T2N<T>; \
+})
+
+//template<typename T>
+//struct countType
+//{
+//const size_t arr = Type2Num<int>();
+//};
+//
+/*
+template<typename T>
+struct Type2Num
+{
+    const void* __ind = reinterpret_cast<const void*>(&typeid(T));
+
+size_t getval()
+{
+    return *reinterpret_cast<const size_t*>(&__ind)/16;
+}
+};
+
+template<size_t __idx>
+struct Num2Type
+{
+    
+};
+
+*/
+
 
 
 int main()
 {
-    cout << sizeof(__Info2Type<int>) << endl;
+ //   cout << sizeof(__Info2Type<int>) << endl;
     treenode node;
     int bb = 88;
     auto aa = __access_once(bb);
@@ -222,10 +294,25 @@ int main()
     cout << (*reinterpret_cast<type_info**>(&__idx))->name() << endl;
 
     if (typeid(int) == typeid(bool)) cout << "OK" << endl; else cout << "NOT OK" << endl;
-const char* ppp;
-    cout << typeid(decltype(ppp)).name() << endl;
-//    Type2Str<int> cc(88);
-  //  decltype(__str2type(AA()))::Type cc;
-    //cout << typeid(decltype(cc)).name() << endl;
-   // cout << std::less<int>()(88, AA()) << endl;
+    cout << typeid(decltype(&typeid(int))).name()<< endl;
+ shared_ptr_wrapper<int> spi;
+    auto size1  = reinterpret_cast<const void*>(&typeid(int));
+    cout << Type2Num<int>() << endl;
+    cout << Type2Num<uint32_t>() << endl;
+    cout<< typeid(type_info).name() <<endl;
+  AA aaaa;
+  bind(&AA::isLeaf,&aaaa)();
+
+  shared_ptr<AA> paa = make_shared<BB>();
+
+ cout << reinterpret_cast<BB*>(paa.get())->isLeaf() << endl; 
+
+ cout << sizeof(tuple<int,bool>) << endl;
+ cout << this_thread::get_id() << endl;
+ cout << pthread_self() << endl;
+ //  AA paa;
+    cout << T2N<uint32_t>().__index << endl;
+
+    std::array<int,Type2Num<int>()> arry;
+    // cout << std::less<int>()(88, AA()) << endl;
 }
